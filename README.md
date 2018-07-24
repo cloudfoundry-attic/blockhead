@@ -6,3 +6,10 @@ CF-Extensions Blockhead project
 
 >>>>>>> travis badge
 An OSBAPI-compatible broker written in golang.
+
+
+    go build cmd/broker && ./broker
+
+OR
+
+    docker build -t blockhead . && docker run blockhead
