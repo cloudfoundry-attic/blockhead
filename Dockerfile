@@ -1,5 +1,5 @@
 from golang:1.10-alpine3.8 as builder
-workdir /go/src/github.com/jberkhahn/blockhead
+workdir /go/src/github.com/cloudfoundry-incubator/blockhead
 copy . .
 run go build -v -o /broker ./cmd/broker
 

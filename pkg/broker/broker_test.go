@@ -3,7 +3,7 @@ package broker_test
 import (
 	"context"
 
-	. "github.com/jberkhahn/blockhead/pkg/broker"
+	. "github.com/cloudfoundry-incubator/blockhead/pkg/broker"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-cf/brokerapi"
