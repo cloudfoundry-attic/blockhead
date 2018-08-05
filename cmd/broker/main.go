@@ -8,8 +8,8 @@ import (
 	"code.cloudfoundry.org/lager"
 	"github.com/pivotal-cf/brokerapi"
 
-	"github.com/jberkhahn/blockhead/pkg/broker"
-	"github.com/jberkhahn/blockhead/pkg/config"
+	"github.com/cloudfoundry-incubator/blockhead/pkg/broker"
+	"github.com/cloudfoundry-incubator/blockhead/pkg/config"
 )
 
 func main() {

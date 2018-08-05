@@ -1,7 +1,7 @@
 package config_test
 
 import (
-	. "github.com/jberkhahn/blockhead/pkg/config"
+	. "github.com/cloudfoundry-incubator/blockhead/pkg/config"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
