@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 
@@ -14,9 +13,13 @@ import (
 
 func main() {
 	logger := lager.NewLogger("blockhead-broker")
-	configFilepath := os.Args[1]
 	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.DEBUG))
-	logger.Debug(fmt.Sprintf("reading config file %q", configFilepath))
+
+	if len(os.Args) < 2 {
+		panic("config file missing")
+	}
+
+	configFilepath := os.Args[1]
 	cfg, err := config.NewConfig(configFilepath)
 	if err != nil {
 		panic(err)
