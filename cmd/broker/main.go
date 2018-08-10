@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"net/http"
 	"os"
 
@@ -16,13 +17,13 @@ func main() {
 	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.DEBUG))
 
 	if len(os.Args) < 2 {
-		panic("config file missing")
+		logger.Fatal("main", errors.New("config file is missing"))
 	}
 
 	configFilepath := os.Args[1]
 	cfg, err := config.NewConfig(configFilepath)
 	if err != nil {
-		panic(err)
+		logger.Fatal("main", err)
 	}
 
 	broker := broker.BlockheadBroker{}
