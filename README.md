@@ -11,4 +11,4 @@ Run the broker by doing:
 
 OR
 
-    docker build -t blockhead . && docker run blockhead
+    docker build -t blockhead . && docker run -v $(pwd)/config.json:/config.json -p 3333:3333 blockhead
