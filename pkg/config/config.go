@@ -3,16 +3,20 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/pivotal-cf/brokerapi"
 	"io/ioutil"
+
+	"github.com/pivotal-cf/brokerapi"
 )
 
-type BlockheadConfig struct {
-	Password string `yaml:"password,omitempty"`
-	Username string `yaml:"username,omitempty"`
+type Config struct {
+	Password string            `json:"password,omitempty"`
+	Username string            `json:"username,omitempty"`
+	Service  brokerapi.Service `json:"service"`
 }
 
-func NewConfig(filepath string) (*BlockheadConfig, error) {
-	config := &BlockheadConfig{}
+func NewConfig(filepath string) (*Config, error) {
+	config := &Config{}
 	bytes, err := ioutil.ReadFile(filepath)
 	if err != nil {
 		return nil, fmt.Errorf("Error opening config file: %v", err.Error())
