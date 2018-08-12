@@ -1,6 +1,8 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"net/http"
 	"os"
 
@@ -15,17 +17,14 @@ func main() {
 	logger := lager.NewLogger("blockhead-broker")
 	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.DEBUG))
 
-	if len(os.Args) < 2 {
-		panic("config file missing")
-	}
+	flag.Parse()
 
-	configFilepath := os.Args[1]
-	cfg, err := config.NewConfig(configFilepath)
+	cfg, err := config.NewConfig(config.ConfigPath, config.ServicePaths)
 	if err != nil {
 		panic(err)
 	}
 
-	broker := broker.BlockheadBroker{}
+	broker := broker.NewBlockheadBroker(*cfg)
 	creds := brokerapi.BrokerCredentials{
 		Username: cfg.Username,
 		Password: cfg.Password,
@@ -33,5 +32,5 @@ func main() {
 	brokerAPI := brokerapi.New(broker, logger, creds)
 
 	http.Handle("/", brokerAPI)
-	logger.Fatal("http-listen", http.ListenAndServe("0.0.0.0:3333", nil))
+	logger.Fatal("http-listen", http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", cfg.Port), nil))
 }

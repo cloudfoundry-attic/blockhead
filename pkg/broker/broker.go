@@ -3,36 +3,44 @@ package broker
 import (
 	"context"
 
+	"github.com/cloudfoundry-incubator/blockhead/pkg/config"
 	"github.com/pivotal-cf/brokerapi"
 )
 
 type BlockheadBroker struct {
+	config config.Config
 }
 
-func (blockheadbroker BlockheadBroker) Services(ctx context.Context) ([]brokerapi.Service, error) {
-	return []brokerapi.Service{}, nil
+func NewBlockheadBroker(config config.Config) BlockheadBroker {
+	return BlockheadBroker{
+		config: config,
+	}
 }
 
-func (blockheadbroker BlockheadBroker) Provision(ctx context.Context, instanceID string, details brokerapi.ProvisionDetails, asyncAllowed bool) (brokerapi.ProvisionedServiceSpec, error) {
+func (b BlockheadBroker) Services(ctx context.Context) ([]brokerapi.Service, error) {
+	return b.config.Services, nil
+}
+
+func (b BlockheadBroker) Provision(ctx context.Context, instanceID string, details brokerapi.ProvisionDetails, asyncAllowed bool) (brokerapi.ProvisionedServiceSpec, error) {
 	return brokerapi.ProvisionedServiceSpec{}, nil
 }
 
-func (blockheadbroker BlockheadBroker) Deprovision(ctx context.Context, instanceID string, details brokerapi.DeprovisionDetails, asyncAllowed bool) (brokerapi.DeprovisionServiceSpec, error) {
+func (b BlockheadBroker) Deprovision(ctx context.Context, instanceID string, details brokerapi.DeprovisionDetails, asyncAllowed bool) (brokerapi.DeprovisionServiceSpec, error) {
 	return brokerapi.DeprovisionServiceSpec{}, nil
 }
 
-func (blockheadbroker BlockheadBroker) Bind(ctx context.Context, instanceID, bindingID string, details brokerapi.BindDetails) (brokerapi.Binding, error) {
+func (b BlockheadBroker) Bind(ctx context.Context, instanceID, bindingID string, details brokerapi.BindDetails) (brokerapi.Binding, error) {
 	return brokerapi.Binding{}, nil
 }
 
-func (blockheadbroker BlockheadBroker) Unbind(ctx context.Context, instanceID, bindingID string, details brokerapi.UnbindDetails) error {
+func (b BlockheadBroker) Unbind(ctx context.Context, instanceID, bindingID string, details brokerapi.UnbindDetails) error {
 	return nil
 }
 
-func (blockheadbroker BlockheadBroker) Update(ctx context.Context, instanceID string, details brokerapi.UpdateDetails, asyncAllowed bool) (brokerapi.UpdateServiceSpec, error) {
+func (b BlockheadBroker) Update(ctx context.Context, instanceID string, details brokerapi.UpdateDetails, asyncAllowed bool) (brokerapi.UpdateServiceSpec, error) {
 	return brokerapi.UpdateServiceSpec{}, nil
 }
 
-func (blockheadbroker BlockheadBroker) LastOperation(ctx context.Context, instanceID, operationData string) (brokerapi.LastOperation, error) {
+func (b BlockheadBroker) LastOperation(ctx context.Context, instanceID, operationData string) (brokerapi.LastOperation, error) {
 	return brokerapi.LastOperation{}, nil
 }
