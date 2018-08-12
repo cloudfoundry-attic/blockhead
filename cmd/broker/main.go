@@ -32,5 +32,5 @@ func main() {
 	brokerAPI := brokerapi.New(broker, logger, creds)
 
 	http.Handle("/", brokerAPI)
-	logger.Fatal("http-listen", http.ListenAndServe(fmt.Sprintf("localhost:%d", cfg.Port), nil))
+	logger.Fatal("http-listen", http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", cfg.Port), nil))
 }
