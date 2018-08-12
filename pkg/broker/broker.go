@@ -18,9 +18,7 @@ func NewBlockheadBroker(config config.Config) BlockheadBroker {
 }
 
 func (b BlockheadBroker) Services(ctx context.Context) ([]brokerapi.Service, error) {
-	return []brokerapi.Service{
-		b.config.Service,
-	}, nil
+	return b.config.Services, nil
 }
 
 func (b BlockheadBroker) Provision(ctx context.Context, instanceID string, details brokerapi.ProvisionDetails, asyncAllowed bool) (brokerapi.ProvisionedServiceSpec, error) {

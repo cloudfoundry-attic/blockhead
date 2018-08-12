@@ -3,16 +3,17 @@ package broker_test
 import (
 	"context"
 
-	"github.com/cloudfoundry-incubator/blockhead/pkg/broker"
-	"github.com/cloudfoundry-incubator/blockhead/pkg/config"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	"github.com/cloudfoundry-incubator/blockhead/pkg/broker"
+	"github.com/cloudfoundry-incubator/blockhead/pkg/config"
 	"github.com/pivotal-cf/brokerapi"
 )
 
 var _ = Describe("Broker", func() {
 	var (
-		blockhead BlockheadBroker
+		blockhead broker.BlockheadBroker
 		ctx       context.Context
 		cfg       *config.Config
 		err       error
@@ -57,36 +58,64 @@ var _ = Describe("Broker", func() {
 	})
 
 	Context("Services", func() {
+		var expectedService brokerapi.Service
+
 		BeforeEach(func() {
-			cfg, err = config.NewConfig("../config/assets/service_config.json")
+			cfg, err = config.NewConfig(
+				"../config/assets/test_config.json",
+				config.ServiceFlags{
+					"../config/assets/service_config.json",
+				},
+			)
 			Expect(err).NotTo(HaveOccurred())
+
+			True := true
+			expectedService = brokerapi.Service{
+				ID:          "some-id",
+				Name:        "eth",
+				Description: "some-desc",
+				Bindable:    true,
+				Tags:        []string{"eth", "geth"},
+				Metadata: &brokerapi.ServiceMetadata{
+					DisplayName:         "some-name",
+					LongDescription:     "some-long-desc",
+					ProviderDisplayName: "some-provider-display-name",
+				},
+				DashboardClient: &brokerapi.ServiceDashboardClient{
+					ID:     "some-client-id",
+					Secret: "some-secret",
+				},
+				Plans: []brokerapi.ServicePlan{
+					brokerapi.ServicePlan{
+						ID:          "some-plan-id",
+						Name:        "free",
+						Description: "free-trial",
+						Free:        &True,
+						Metadata: &brokerapi.ServicePlanMetadata{
+							DisplayName: "service-plan-metadata",
+							Costs: []brokerapi.ServicePlanCost{
+								brokerapi.ServicePlanCost{
+									Amount: map[string]float64{"usd": 1.0},
+									Unit:   "monthly",
+								},
+							},
+							Bullets: []string{"dedicated-node", "another-node"},
+							AdditionalMetadata: map[string]interface{}{
+								"container": map[string]interface{}{
+									"backend": "docker",
+									"image":   "some-image",
+								},
+							},
+						},
+					},
+				},
+			}
 		})
 
 		It("should return service definition", func() {
 			services, err := blockhead.Services(ctx)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(services).To(HaveLen(1))
-
-			service := services[0]
-			Expect(service.Name).To(Equal("eth"))
-			Expect(service.Description).To(Equal("some-desc"))
-			Expect(service.Bindable).To(BeTrue())
-			Expect(service.Tags).To(ConsistOf("eth", "geth"))
-			Expect(service.Metadata.DisplayName).To(Equal("some-name"))
-			Expect(service.Metadata.LongDescription).To(Equal("some-long-desc"))
-			Expect(service.Metadata.ProviderDisplayName).To(Equal("some-provider-display-name"))
-			Expect(service.DashboardClient.ID).To(Equal("some-client-id"))
-			Expect(service.DashboardClient.Secret).To(Equal("some-secret"))
-			Expect(service.Plans).To(HaveLen(1))
-			Expect(service.Plans[0].ID).To(Equal("some-plan-id"))
-			Expect(service.Plans[0].Name).To(Equal("free"))
-			Expect(service.Plans[0].Description).To(Equal("free-trial"))
-			Expect(service.Plans[0].Metadata.Costs).To(HaveLen(1))
-			Expect(service.Plans[0].Metadata.Costs[0].Amount["usd"]).To(Equal(1.0))
-			Expect(service.Plans[0].Metadata.Costs[0].Unit).To(Equal("monthly"))
-			Expect(service.Plans[0].Metadata.Bullets).To(ConsistOf("dedicated-node", "another-node"))
-			Expect((service.Plans[0].Metadata.AdditionalMetadata["container"]).(map[string]interface{})["backend"]).To(Equal("docker"))
-			Expect((service.Plans[0].Metadata.AdditionalMetadata["container"]).(map[string]interface{})["image"]).To(Equal("some-image"))
+			Expect(services).To(ConsistOf(expectedService))
 		})
 	})
 })
