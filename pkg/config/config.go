@@ -11,6 +11,7 @@ import (
 type Config struct {
 	Password string              `json:"password,omitempty"`
 	Username string              `json:"username,omitempty"`
+	Port     int                 `json:"port"`
 	Services []brokerapi.Service `json:"service"`
 }
 
