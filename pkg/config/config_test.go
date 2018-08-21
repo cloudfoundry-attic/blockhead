@@ -15,6 +15,7 @@ var _ = Describe("Config", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(config.Username).To(Equal("username"))
 			Expect(config.Password).To(Equal("password"))
+			Expect(config.Port).To(Equal(uint16(3335)))
 		})
 
 		It("errors when provided a nonexistent config file", func() {
@@ -29,6 +30,14 @@ var _ = Describe("Config", func() {
 			Expect(config).To(BeNil())
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("Error parsing config file"))
+		})
+
+		It("fills in defaults when provided an empty config file", func() {
+			config, err := config.NewConfig("assets/required_config.json")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(config.Username).To(Equal(""))
+			Expect(config.Password).To(Equal(""))
+			Expect(config.Port).To(Equal(uint16(3333)))
 		})
 	})
 })

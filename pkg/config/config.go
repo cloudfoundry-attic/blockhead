@@ -9,6 +9,7 @@ import (
 type Config struct {
 	Password string `json:"password,omitempty"`
 	Username string `json:"username,omitempty"`
+	Port     uint16 `json:"port"`
 }
 
 func NewConfig(configPath string) (*Config, error) {
@@ -22,5 +23,10 @@ func NewConfig(configPath string) (*Config, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Error parsing config file: %v", err.Error())
 	}
+
+	if config.Port == 0 {
+		config.Port = 3333
+	}
+
 	return config, nil
 }

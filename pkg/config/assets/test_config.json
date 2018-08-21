@@ -1,4 +1,5 @@
 {
   "username": "username",
-  "password": "password"
+  "password": "password",
+  "port": 3335
 }

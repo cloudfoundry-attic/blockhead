@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 
@@ -34,5 +35,5 @@ func main() {
 	brokerAPI := brokerapi.New(broker, logger, creds)
 
 	http.Handle("/", brokerAPI)
-	logger.Fatal("http-listen", http.ListenAndServe("0.0.0.0:3333", nil))
+	logger.Fatal("http-listen", http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), nil))
 }
