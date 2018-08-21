@@ -6,14 +6,14 @@ import (
 	"io/ioutil"
 )
 
-type BlockheadConfig struct {
-	Password string `yaml:"password,omitempty"`
-	Username string `yaml:"username,omitempty"`
+type Config struct {
+	Password string `json:"password,omitempty"`
+	Username string `json:"username,omitempty"`
 }
 
-func NewConfig(filepath string) (*BlockheadConfig, error) {
-	config := &BlockheadConfig{}
-	bytes, err := ioutil.ReadFile(filepath)
+func NewConfig(configPath string) (*Config, error) {
+	config := &Config{}
+	bytes, err := ioutil.ReadFile(configPath)
 	if err != nil {
 		return nil, fmt.Errorf("Error opening config file: %v", err.Error())
 	}

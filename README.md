@@ -3,11 +3,11 @@
 
 An OSBAPI-compatible broker written in golang.
 
-Configure the broker, by setting `username` and `password` in `creds.json`.
+Configure the broker, by setting `username` and `password` in `config.json`.
 
 Run the broker by doing:
 
-    go build cmd/broker && ./broker creds.json
+    go build cmd/broker && ./broker config.json
 
 OR
 
