@@ -6,5 +6,5 @@ run go build -v -o /broker ./cmd/broker
 from alpine:3.8
 expose 3333
 copy --from=builder /broker /broker
-add ./creds.json /creds.json
-cmd ["/broker","/creds.json"]
+add ./config.json /config.json
+cmd ["/broker","/config.json"]

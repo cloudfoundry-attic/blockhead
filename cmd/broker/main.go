@@ -26,7 +26,7 @@ func main() {
 		logger.Fatal("main", err)
 	}
 
-	broker := broker.BlockheadBroker{}
+	broker := broker.NewBlockheadBroker(*cfg)
 	creds := brokerapi.BrokerCredentials{
 		Username: cfg.Username,
 		Password: cfg.Password,

@@ -3,18 +3,33 @@ package broker_test
 import (
 	"context"
 
-	. "github.com/cloudfoundry-incubator/blockhead/pkg/broker"
+	"github.com/pivotal-cf/brokerapi"
+
+	"github.com/cloudfoundry-incubator/blockhead/pkg/broker"
+	"github.com/cloudfoundry-incubator/blockhead/pkg/config"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/pivotal-cf/brokerapi"
 )
 
 var _ = Describe("Broker", func() {
-	Context("brokerapi", func() {
-		It("implements the 7 brokerapi interface methods", func() {
-			blockhead := BlockheadBroker{}
-			ctx := context.Background()
+	var (
+		blockhead broker.BlockheadBroker
+		ctx       context.Context
+		cfg       *config.Config
+	)
 
+	JustBeforeEach(func() {
+		blockhead = broker.NewBlockheadBroker(*cfg)
+		ctx = context.Background()
+	})
+
+	Context("brokerapi", func() {
+		BeforeEach(func() {
+			cfg = &config.Config{}
+		})
+
+		It("implements the 7 brokerapi interface methods", func() {
 			_, err := blockhead.Services(ctx)
 			Expect(err).NotTo(HaveOccurred())
 			provisionDetails := brokerapi.ProvisionDetails{}

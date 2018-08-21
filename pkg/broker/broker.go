@@ -4,9 +4,18 @@ import (
 	"context"
 
 	"github.com/pivotal-cf/brokerapi"
+
+	"github.com/cloudfoundry-incubator/blockhead/pkg/config"
 )
 
 type BlockheadBroker struct {
+	config config.Config
+}
+
+func NewBlockheadBroker(config config.Config) BlockheadBroker {
+	return BlockheadBroker{
+		config: config,
+	}
 }
 
 func (blockheadbroker BlockheadBroker) Services(ctx context.Context) ([]brokerapi.Service, error) {
