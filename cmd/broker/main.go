@@ -6,25 +6,29 @@ import (
 	"net/http"
 	"os"
 
-	"code.cloudfoundry.org/lager"
 	"github.com/pivotal-cf/brokerapi"
+	"go.uber.org/zap"
 
 	"github.com/cloudfoundry-incubator/blockhead/pkg/broker"
 	"github.com/cloudfoundry-incubator/blockhead/pkg/config"
+	"github.com/cloudfoundry-incubator/blockhead/pkg/util/logging"
 )
 
 func main() {
-	logger := lager.NewLogger("blockhead-broker")
-	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.DEBUG))
+	zlogger, _ := zap.NewProduction()
+	defer zlogger.Sync() // flushes buffer on exit
+	zlogger.Info("starting blockhead broker")
+
+	lag := logging.NewLagerAdapter(zlogger)
 
 	if len(os.Args) < 2 {
-		logger.Fatal("main", errors.New("config file is missing"))
+		lag.Fatal("main", errors.New("config file is missing"))
 	}
 
 	configFilepath := os.Args[1]
 	cfg, err := config.NewConfig(configFilepath)
 	if err != nil {
-		logger.Fatal("main", err)
+		lag.Fatal("main", err)
 	}
 
 	broker := broker.NewBlockheadBroker(*cfg)
@@ -32,8 +36,8 @@ func main() {
 		Username: cfg.Username,
 		Password: cfg.Password,
 	}
-	brokerAPI := brokerapi.New(broker, logger, creds)
+	brokerAPI := brokerapi.New(broker, lag, creds)
 
 	http.Handle("/", brokerAPI)
-	logger.Fatal("http-listen", http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), nil))
+	lag.Fatal("http-listen", http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), nil))
 }
