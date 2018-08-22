@@ -17,23 +17,24 @@ func main() {
 	logger := lager.NewLogger("blockhead-broker")
 	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.DEBUG))
 
-	if len(os.Args) < 2 {
-		logger.Fatal("main", errors.New("config file is missing"))
+	if len(os.Args) < 3 {
+		logger.Fatal("main", errors.New("config file or service directory missing"))
 	}
 
-	configFilepath := os.Args[1]
-	cfg, err := config.NewConfig(configFilepath)
+	configPath := os.Args[1]
+	servicePath := os.Args[2]
+	state, err := config.NewState(configPath, servicePath)
 	if err != nil {
-		logger.Fatal("main", err)
+		logger.Fatal("failed to read configuration", err)
 	}
 
-	broker := broker.NewBlockheadBroker(*cfg)
+	broker := broker.NewBlockheadBroker(state)
 	creds := brokerapi.BrokerCredentials{
-		Username: cfg.Username,
-		Password: cfg.Password,
+		Username: state.Config.Username,
+		Password: state.Config.Password,
 	}
 	brokerAPI := brokerapi.New(broker, logger, creds)
 
 	http.Handle("/", brokerAPI)
-	logger.Fatal("http-listen", http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), nil))
+	logger.Fatal("http-listen", http.ListenAndServe(fmt.Sprintf(":%d", state.Config.Port), nil))
 }

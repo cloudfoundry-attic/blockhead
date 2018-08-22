@@ -1,0 +1,45 @@
+{
+    "name": "eth",
+    "id": "24736f4a-72b8-4298-96f7-b48c4045ddfd",
+    "description": "Ethereum Geth Node",
+    "bindable": true,
+    "tags": [
+        "eth",
+        "geth"
+    ],
+    "metadata": {
+        "displayName": "Geth 1.8",
+        "longDescription": "Ethereum Geth Node",
+        "providerDisplayName": "Cloud Foundry Community"
+    },
+    "dashboard_client": {
+        "id": "blockhead-broker-eth",
+        "secret": ""
+    },
+    "plans": [
+        {
+            "id": "d42fc3cc-1341-4aa3-866e-01bc5243dc2e",
+            "name": "free",
+            "free": true,
+            "description": "Free Trial",
+            "metadata": {
+                 "displayName": "service-plan-metadata",
+                 "container": {
+                   "backend": "docker",
+                   "image": "nimak/eth-dev"
+                 },
+                 "costs": [
+                     {
+                         "amount": {
+                           "usd": 1.0
+                         },
+                         "unit": "monthly"
+                     }
+                 ],
+                 "bullets": [
+                     "dedicated-node"
+                 ]
+            }
+        }
+    ]
+}

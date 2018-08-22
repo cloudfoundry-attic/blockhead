@@ -1,0 +1,45 @@
+{
+    "name": "another-eth",
+    "id": "another-some-id",
+    "description": "another-some-desc",
+    "bindable": true,
+    "tags": [
+      "eth",
+      "geth"
+    ],
+    "metadata": {
+      "displayName": "some-name",
+      "longDescription": "some-long-desc",
+      "providerDisplayName": "some-provider-display-name"
+    },
+    "dashboard_client": {
+      "id": "some-client-id",
+      "secret": "some-secret"
+    },
+    "plans": [
+       {
+          "id": "some-plan-id",
+          "name": "free",
+          "description": "free-trial",
+          "free": true,
+          "metadata": {
+             "displayName": "service-plan-metadata",
+             "container": {
+               "backend": "docker",
+               "image": "some-image"
+             },
+             "costs": [
+               {
+                 "amount": {
+                   "usd": 1.0
+                 },
+                 "unit": "monthly"
+               }
+             ],
+             "bullets": [
+               "dedicated-node",
+               "another-node"
+             ]
+          }
+    }]
+}
