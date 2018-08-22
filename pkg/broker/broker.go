@@ -9,17 +9,25 @@ import (
 )
 
 type BlockheadBroker struct {
-	config config.Config
+	state *config.State
 }
 
-func NewBlockheadBroker(config config.Config) BlockheadBroker {
+func NewBlockheadBroker(state *config.State) BlockheadBroker {
 	return BlockheadBroker{
-		config: config,
+		state: state,
 	}
 }
 
 func (b BlockheadBroker) Services(ctx context.Context) ([]brokerapi.Service, error) {
-	return []brokerapi.Service{}, nil
+	services := b.state.Services
+	for _, service := range services {
+		for _, plan := range service.Plans {
+			// Clearing out data that only broker needs to know
+			plan.Metadata.AdditionalMetadata = nil
+		}
+	}
+
+	return services, nil
 }
 
 func (b BlockheadBroker) Provision(ctx context.Context, instanceID string, details brokerapi.ProvisionDetails, asyncAllowed bool) (brokerapi.ProvisionedServiceSpec, error) {
