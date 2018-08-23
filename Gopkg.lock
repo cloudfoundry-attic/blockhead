@@ -61,6 +61,8 @@
   packages = [
     ".",
     "format",
+    "gbytes",
+    "gexec",
     "internal/assertion",
     "internal/asyncassertion",
     "internal/oraclematcher",
@@ -74,6 +76,12 @@
   ]
   revision = "b6ea1ea48f981d0f615a154a45eabb9dd466556d"
   version = "v1.4.1"
+
+[[projects]]
+  name = "github.com/pborman/uuid"
+  packages = ["."]
+  revision = "e790cca94e6cc75c7064b1332e63811d4aae1a53"
+  version = "v1.1"
 
 [[projects]]
   name = "github.com/pivotal-cf/brokerapi"
@@ -146,6 +154,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "4b9e90450786b573d0a9ee59cb9a949d49f90c164f79cf6cd6fdedb2a5586f9e"
+  inputs-digest = "cd75cd45c20ae27419b80bb016c8b01d1463aa18b73cadc0323aca5da3947f5b"
   solver-name = "gps-cdcl"
   solver-version = 1

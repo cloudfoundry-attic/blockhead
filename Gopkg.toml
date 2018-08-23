@@ -1,3 +1,7 @@
 [[override]]
   name = "gopkg.in/fsnotify.v1"
   source = "https://github.com/fsnotify/fsnotify.git"
+
+[[constraint]]
+  name = "github.com/pborman/uuid"
+  version = "1.1.0"
