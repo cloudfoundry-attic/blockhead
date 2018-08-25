@@ -16,17 +16,17 @@ var _ = Describe("Broker", func() {
 	var (
 		blockhead broker.BlockheadBroker
 		ctx       context.Context
-		cfg       *config.Config
+		state     *config.State
 	)
 
 	JustBeforeEach(func() {
-		blockhead = broker.NewBlockheadBroker(*cfg)
+		blockhead = broker.NewBlockheadBroker(state)
 		ctx = context.Background()
 	})
 
 	Context("brokerapi", func() {
 		BeforeEach(func() {
-			cfg = &config.Config{}
+			state = &config.State{}
 		})
 
 		It("implements the 7 brokerapi interface methods", func() {

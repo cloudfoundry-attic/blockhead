@@ -1,0 +1,16 @@
+{
+    "name": "name-2",
+    "description": "desc",
+    "tags": [
+        "eth",
+        "geth"
+    ],
+    "display_name": "display-name",
+    "plans": [
+        {
+            "name": "plan-name-2",
+            "image": "image",
+            "description": "plan-desc"
+        }
+    ]
+}

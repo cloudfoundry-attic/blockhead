@@ -9,12 +9,12 @@ import (
 )
 
 type BlockheadBroker struct {
-	config config.Config
+	state *config.State
 }
 
-func NewBlockheadBroker(config config.Config) BlockheadBroker {
+func NewBlockheadBroker(state *config.State) BlockheadBroker {
 	return BlockheadBroker{
-		config: config,
+		state: state,
 	}
 }
 
