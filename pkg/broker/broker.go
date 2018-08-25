@@ -19,7 +19,34 @@ func NewBlockheadBroker(state *config.State) BlockheadBroker {
 }
 
 func (b BlockheadBroker) Services(ctx context.Context) ([]brokerapi.Service, error) {
-	return []brokerapi.Service{}, nil
+	services := []brokerapi.Service{}
+	free := true
+	for serviceID, service := range b.state.Services {
+		s := brokerapi.Service{
+			ID:          serviceID,
+			Name:        service.Name,
+			Description: service.Description,
+			Bindable:    true,
+			Tags:        service.Tags,
+			Metadata: &brokerapi.ServiceMetadata{
+				DisplayName: service.DisplayName,
+			},
+			Plans: []brokerapi.ServicePlan{},
+		}
+
+		for planID, plan := range service.Plans {
+			p := brokerapi.ServicePlan{
+				ID:          planID,
+				Name:        plan.Name,
+				Description: plan.Description,
+				Free:        &free,
+			}
+			s.Plans = append(s.Plans, p)
+		}
+		services = append(services, s)
+	}
+
+	return services, nil
 }
 
 func (b BlockheadBroker) Provision(ctx context.Context, instanceID string, details brokerapi.ProvisionDetails, asyncAllowed bool) (brokerapi.ProvisionedServiceSpec, error) {
