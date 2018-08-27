@@ -64,6 +64,6 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	servicePath = filepath.Join(absPath, "services")
 })
 
-var _ = AfterEach(func() {
+var _ = AfterSuite(func() {
 	os.RemoveAll(configPath)
 })
