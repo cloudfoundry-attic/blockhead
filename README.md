@@ -7,7 +7,7 @@ Configure the broker, by setting `username` and `password` in `config.json`.
 
 Run the broker by doing:
 
-    go build cmd/broker && ./broker config.json
+    go build ./cmd/broker && ./broker config.json
 
 OR
 
