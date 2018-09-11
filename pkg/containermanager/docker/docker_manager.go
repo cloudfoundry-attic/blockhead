@@ -87,24 +87,18 @@ func createContainerConfig(containerConfig *containermanager.ContainerConfig) (*
 	}
 
 	config := &container.Config{
-		Hostname:     "",
-		Domainname:   "",
-		User:         "",
-		ExposedPorts: ports,
-		AttachStdin:  false,
-		AttachStdout: true,
-		AttachStderr: true,
-		Tty:          false,
-		OpenStdin:    false,
-		StdinOnce:    false,
-		// Env
-		// Cmd
-		// Healthcheck
-		// ArgsEscaped
-		Image:   containerConfig.Image,
-		Volumes: map[string]struct{}{},
-		// WorkingDir
-		// Entrypoint
+		Hostname:        "",
+		Domainname:      "",
+		User:            "",
+		ExposedPorts:    ports,
+		AttachStdin:     false,
+		AttachStdout:    true,
+		AttachStderr:    true,
+		Tty:             false,
+		OpenStdin:       false,
+		StdinOnce:       false,
+		Image:           containerConfig.Image,
+		Volumes:         map[string]struct{}{},
 		NetworkDisabled: false,
 	}
 
@@ -113,10 +107,6 @@ func createContainerConfig(containerConfig *containermanager.ContainerConfig) (*
 
 func createHostConfig() (*container.HostConfig, error) {
 	hostConfig := &container.HostConfig{
-		// Binds:           volume_bindings(guid),
-		// Memory:          convert_memory(memory),
-		// MemorySwap:      convert_memory(memory_swap),
-		// CpuShares:       cpu_shares,
 		PublishAllPorts: false,
 		Privileged:      false,
 	}
