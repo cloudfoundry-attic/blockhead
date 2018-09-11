@@ -10,6 +10,9 @@
         {
             "name": "plan-name",
             "image": "image",
+            "ports": [
+                "1234"
+            ],
             "description": "plan-desc"
         }
     ]

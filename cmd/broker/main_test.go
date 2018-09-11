@@ -1,15 +1,20 @@
 package main_test
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os/exec"
-	"time"
 
 	"github.com/cloudfoundry-incubator/blockhead/pkg/utils"
+	"github.com/docker/docker/api/types"
+	dockerclient "github.com/docker/docker/client"
+	"github.com/docker/go-connections/nat"
 	"github.com/onsi/gomega/gexec"
+	"github.com/pborman/uuid"
 	"github.com/pivotal-cf/brokerapi"
 
 	. "github.com/onsi/ginkgo"
@@ -55,7 +60,6 @@ var _ = Describe("Blockhead", func() {
 		var (
 			req    *http.Request
 			client *http.Client
-			resp   *http.Response
 		)
 		BeforeEach(func() {
 			args = []string{
@@ -72,15 +76,10 @@ var _ = Describe("Blockhead", func() {
 		Context("Service", func() {
 			var expectedService brokerapi.Service
 
-			poller := func() error {
-				resp, err = client.Do(req)
-				return err
-			}
-
 			BeforeEach(func() {
 				True := true
 				expectedService = brokerapi.Service{
-					ID:          "24736f4a-72b8-4298-96f7-b48c4045ddfd",
+					ID:          "not-checked-in-service-matcher",
 					Name:        "eth",
 					Description: "Ethereum Geth Node",
 					Bindable:    true,
@@ -90,7 +89,7 @@ var _ = Describe("Blockhead", func() {
 					},
 					Plans: []brokerapi.ServicePlan{
 						brokerapi.ServicePlan{
-							ID:          "d42fc3cc-1341-4aa3-866e-01bc5243dc2e",
+							ID:          "not-checked-in-service-matcher",
 							Name:        "free",
 							Description: "Free Trial",
 							Free:        &True,
@@ -99,25 +98,137 @@ var _ = Describe("Blockhead", func() {
 				}
 			})
 
-			It("should successfully return services", func() {
-				catalogURL := fmt.Sprintf("%s%s", serverAddress, "/v2/catalog")
+			var requestCatalog = func() *http.Response {
+				catalogURL := fmt.Sprintf("%s/v2/%s", serverAddress, "catalog")
 				req, err = http.NewRequest("GET", catalogURL, nil)
 				Expect(err).NotTo(HaveOccurred())
 				req.SetBasicAuth("test", "test")
 				req.Header.Add("X-Broker-API-Version", "2.0")
 
-				Eventually(poller, 5*time.Second).Should(Succeed())
-				Expect(resp.StatusCode).To(Equal(http.StatusOK))
+				var resp *http.Response
+				Eventually(func() error {
+					resp, err = client.Do(req)
+					return err
+				}).Should(Succeed())
+				return resp
+			}
 
+			var requestProvision = func(serviceId, planId, instanceId string) *http.Response {
+				request := struct {
+					ServiceId string `json:"service_id"`
+					PlanId    string `json:"plan_id"`
+				}{
+					ServiceId: serviceId,
+					PlanId:    planId,
+				}
+
+				payload := new(bytes.Buffer)
+				json.NewEncoder(payload).Encode(request)
+
+				provisionURL := fmt.Sprintf("%s/v2/%s/%s", serverAddress, "service_instances", instanceId)
+				req, err = http.NewRequest("PUT", provisionURL, payload)
+				Expect(err).NotTo(HaveOccurred())
+				req.SetBasicAuth("test", "test")
+				req.Header.Add("X-Broker-API-Version", "2.0")
+				req.Header.Add("Content-Type", "application/json")
+
+				var resp *http.Response
+				Eventually(func() error {
+					resp, err = client.Do(req)
+					return err
+				}).Should(Succeed())
+				return resp
+			}
+
+			var parseCatalogResponse = func(resp *http.Response) brokerapi.CatalogResponse {
 				defer resp.Body.Close()
 				bytes, _ := ioutil.ReadAll(resp.Body)
 
 				catalog := brokerapi.CatalogResponse{}
 				err = json.Unmarshal(bytes, &catalog)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(catalog.Services).To(ConsistOf(
-					utils.EquivalentBrokerAPIService(expectedService)),
-				)
+				return catalog
+			}
+
+			Context("with an existing service", func() {
+
+				It("should successfully return service catalog", func() {
+					resp := requestCatalog()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(resp.StatusCode).To(Equal(http.StatusOK))
+
+					catalog := parseCatalogResponse(resp)
+					Expect(catalog.Services).To(ConsistOf(
+						utils.EquivalentBrokerAPIService(expectedService)),
+					)
+				})
+
+				Context("when provisioning", func() {
+					var (
+						serviceId, planId string
+						cli               *dockerclient.Client
+						containers        []string
+					)
+
+					var newContainerId = func() string {
+						instanceId := uuid.New()
+						containers = append(containers, instanceId)
+						return instanceId
+					}
+
+					BeforeEach(func() {
+						containers = []string{}
+
+						cli, err = dockerclient.NewEnvClient()
+						Expect(err).NotTo(HaveOccurred())
+
+						resp := requestCatalog()
+						Expect(err).NotTo(HaveOccurred())
+						Expect(resp.StatusCode).To(Equal(http.StatusOK))
+
+						catalog := parseCatalogResponse(resp)
+						service := catalog.Services[0]
+						Expect(service.Plans).To(HaveLen(1))
+						plan := service.Plans[0]
+						serviceId = service.ID
+						planId = plan.ID
+					})
+
+					AfterEach(func() {
+						Expect(err).NotTo(HaveOccurred())
+						for _, containerId := range containers {
+							err = cli.ContainerRemove(context.Background(), containerId, types.ContainerRemoveOptions{Force: true})
+						}
+						Expect(err).NotTo(HaveOccurred())
+					})
+
+					It("should successfully provision the service", func() {
+						instanceId := newContainerId()
+						resp := requestProvision(serviceId, planId, instanceId)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+
+						info, err := cli.ContainerInspect(context.Background(), instanceId)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(info.Config.ExposedPorts).To(HaveKey(nat.Port("8545/tcp")))
+					})
+
+					Context("with an existing node", func() {
+						BeforeEach(func() {
+							existingInstanceId := newContainerId()
+							resp := requestProvision(serviceId, planId, existingInstanceId)
+							Expect(err).NotTo(HaveOccurred())
+							Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+						})
+
+						It("successfully launches a second node", func() {
+							instanceId := newContainerId()
+							resp := requestProvision(serviceId, planId, instanceId)
+							Expect(err).NotTo(HaveOccurred())
+							Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+						})
+					})
+				})
 			})
 		})
 	})

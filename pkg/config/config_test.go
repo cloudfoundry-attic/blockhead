@@ -21,6 +21,7 @@ var _ = Describe("Config", func() {
 		BeforeEach(func() {
 			servicePath = "assets/services"
 		})
+
 		Context("broker config", func() {
 			It("Opens the file and pours it into a Config struct", func() {
 				state, err := config.NewState("assets/configs/test_config.json", servicePath)
@@ -117,7 +118,7 @@ var _ = Describe("Config", func() {
 					BeforeEach(func() {
 						serviceFilePath = fmt.Sprintf("%s/service_config.json", servicePath)
 						copy("assets/services/service_config.json", serviceFilePath)
-						planMap := make(map[string]config.Plan)
+						planMap := make(map[string]*config.Plan)
 						expectedServices = make(map[string]config.Service)
 						expectedService = config.Service{
 							Name:        "name",
@@ -129,10 +130,11 @@ var _ = Describe("Config", func() {
 						expectedPlan := config.Plan{
 							Name:        "plan-name",
 							Image:       "image",
+							Ports:       []string{"1234"},
 							Description: "plan-desc",
 						}
 
-						planMap["uuid-2"] = expectedPlan
+						planMap["uuid-2"] = &expectedPlan
 						expectedService.Plans = planMap
 						expectedServices["uuid-1"] = expectedService
 					})
@@ -141,7 +143,7 @@ var _ = Describe("Config", func() {
 						parsedState, err := config.NewState(configPath, servicePath)
 						Expect(err).NotTo(HaveOccurred())
 
-						Expect(parsedState.Services).To(ConsistOf(utils.EquivalentService(expectedService)))
+						Expect(parsedState.Services).To(ConsistOf(utils.EquivalentService(&expectedService)))
 					})
 
 					Context("when there is another service", func() {
@@ -160,11 +162,12 @@ var _ = Describe("Config", func() {
 							expectedPlan := config.Plan{
 								Name:        "plan-name-2",
 								Image:       "image",
+								Ports:       []string{"1234"},
 								Description: "plan-desc",
 							}
 
-							planMap := make(map[string]config.Plan)
-							planMap["uuid-4"] = expectedPlan
+							planMap := make(map[string]*config.Plan)
+							planMap["uuid-4"] = &expectedPlan
 							anotherExpectedService.Plans = planMap
 							expectedServices["uuid-3"] = anotherExpectedService
 
@@ -175,8 +178,8 @@ var _ = Describe("Config", func() {
 							Expect(err).NotTo(HaveOccurred())
 
 							Expect(parsedState.Services).To(ConsistOf(
-								utils.EquivalentService(expectedService),
-								utils.EquivalentService(anotherExpectedService),
+								utils.EquivalentService(&expectedService),
+								utils.EquivalentService(&anotherExpectedService),
 							))
 						})
 					})

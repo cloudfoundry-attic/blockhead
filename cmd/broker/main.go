@@ -7,10 +7,12 @@ import (
 	"os"
 
 	"code.cloudfoundry.org/lager"
+	"github.com/docker/docker/client"
 	"github.com/pivotal-cf/brokerapi"
 
 	"github.com/cloudfoundry-incubator/blockhead/pkg/broker"
 	"github.com/cloudfoundry-incubator/blockhead/pkg/config"
+	"github.com/cloudfoundry-incubator/blockhead/pkg/containermanager/docker"
 )
 
 func main() {
@@ -23,12 +25,20 @@ func main() {
 
 	configFilepath := os.Args[1]
 	servicePath := os.Args[2]
+
 	state, err := config.NewState(configFilepath, servicePath)
 	if err != nil {
 		logger.Fatal("main", err)
 	}
 
-	broker := broker.NewBlockheadBroker(state)
+	cli, err := client.NewEnvClient()
+	if err != nil {
+		logger.Fatal("docker-client", err)
+	}
+
+	manager := docker.NewDockerContainerManager(logger, cli)
+
+	broker := broker.NewBlockheadBroker(logger, state, manager)
 	creds := brokerapi.BrokerCredentials{
 		Username: state.Config.Username,
 		Password: state.Config.Password,

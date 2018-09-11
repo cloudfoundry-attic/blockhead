@@ -12,7 +12,7 @@ import (
 
 type State struct {
 	Config   Config
-	Services map[string]Service
+	Services map[string]*Service
 }
 
 type Config struct {
@@ -26,13 +26,14 @@ type Service struct {
 	Description string
 	DisplayName string
 	Tags        []string
-	Plans       map[string]Plan
+	Plans       map[string]*Plan
 }
 
 type Plan struct {
-	Name        string `json:"name"`
-	Image       string `json:"image"`
-	Description string `json:"description"`
+	Name        string   `json:"name"`
+	Image       string   `json:"image"`
+	Ports       []string `json:"ports"`
+	Description string   `json:"description"`
 }
 
 type ServiceDefinition struct {
@@ -78,7 +79,7 @@ func NewState(configPath string, servicePath string) (*State, error) {
 
 	state := &State{
 		Config:   *config,
-		Services: map[string]Service{},
+		Services: map[string]*Service{},
 	}
 
 	for _, file := range files {
@@ -99,17 +100,17 @@ func NewState(configPath string, servicePath string) (*State, error) {
 			Description: serviceDef.Description,
 			DisplayName: serviceDef.DisplayName,
 			Tags:        serviceDef.Tags,
-			Plans:       make(map[string]Plan),
+			Plans:       make(map[string]*Plan),
 		}
 
 		serviceID := uuid.New()
 
 		for _, plan := range serviceDef.Plans {
 			id := uuid.New()
-			service.Plans[id] = plan
+			service.Plans[id] = &plan
 		}
 
-		state.Services[serviceID] = service
+		state.Services[serviceID] = &service
 	}
 
 	return state, nil

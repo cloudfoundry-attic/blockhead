@@ -7,8 +7,4 @@ Configure the broker, by setting `username` and `password` in `config.json`.
 
 Run the broker by doing:
 
-    go build ./cmd/broker && ./broker config.json
-
-OR
-
-    docker build -t blockhead . && docker run -v $(pwd)/config.json:/config.json -p 3333:3333 blockhead
+    go run ./cmd/broker/main.go config.json services
