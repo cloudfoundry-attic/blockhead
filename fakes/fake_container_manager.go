@@ -21,6 +21,18 @@ type FakeContainerManager struct {
 	provisionReturnsOnCall map[int]struct {
 		result1 error
 	}
+	DeprovisionStub        func(ctx context.Context, instanceID string) error
+	deprovisionMutex       sync.RWMutex
+	deprovisionArgsForCall []struct {
+		ctx        context.Context
+		instanceID string
+	}
+	deprovisionReturns struct {
+		result1 error
+	}
+	deprovisionReturnsOnCall map[int]struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -74,11 +86,62 @@ func (fake *FakeContainerManager) ProvisionReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
+func (fake *FakeContainerManager) Deprovision(ctx context.Context, instanceID string) error {
+	fake.deprovisionMutex.Lock()
+	ret, specificReturn := fake.deprovisionReturnsOnCall[len(fake.deprovisionArgsForCall)]
+	fake.deprovisionArgsForCall = append(fake.deprovisionArgsForCall, struct {
+		ctx        context.Context
+		instanceID string
+	}{ctx, instanceID})
+	fake.recordInvocation("Deprovision", []interface{}{ctx, instanceID})
+	fake.deprovisionMutex.Unlock()
+	if fake.DeprovisionStub != nil {
+		return fake.DeprovisionStub(ctx, instanceID)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.deprovisionReturns.result1
+}
+
+func (fake *FakeContainerManager) DeprovisionCallCount() int {
+	fake.deprovisionMutex.RLock()
+	defer fake.deprovisionMutex.RUnlock()
+	return len(fake.deprovisionArgsForCall)
+}
+
+func (fake *FakeContainerManager) DeprovisionArgsForCall(i int) (context.Context, string) {
+	fake.deprovisionMutex.RLock()
+	defer fake.deprovisionMutex.RUnlock()
+	return fake.deprovisionArgsForCall[i].ctx, fake.deprovisionArgsForCall[i].instanceID
+}
+
+func (fake *FakeContainerManager) DeprovisionReturns(result1 error) {
+	fake.DeprovisionStub = nil
+	fake.deprovisionReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeContainerManager) DeprovisionReturnsOnCall(i int, result1 error) {
+	fake.DeprovisionStub = nil
+	if fake.deprovisionReturnsOnCall == nil {
+		fake.deprovisionReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.deprovisionReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeContainerManager) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.provisionMutex.RLock()
 	defer fake.provisionMutex.RUnlock()
+	fake.deprovisionMutex.RLock()
+	defer fake.deprovisionMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

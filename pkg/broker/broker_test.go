@@ -2,6 +2,7 @@ package broker_test
 
 import (
 	"context"
+	"errors"
 
 	"code.cloudfoundry.org/lager/lagertest"
 	"github.com/pivotal-cf/brokerapi"
@@ -86,7 +87,10 @@ var _ = Describe("Broker", func() {
 			}
 			instanceID := "instanceID"
 			asyncAllowed := false
-			deprovisionDetails := brokerapi.DeprovisionDetails{}
+			deprovisionDetails := brokerapi.DeprovisionDetails{
+				ServiceID: "service-id",
+				PlanID:    "plan-id",
+			}
 			bindingID := "bindingID"
 			bindDetails := brokerapi.BindDetails{}
 			unbindDetails := brokerapi.UnbindDetails{}
@@ -168,7 +172,6 @@ var _ = Describe("Broker", func() {
 	})
 
 	Context("Provision", func() {
-
 		It("returns an error if the service is missing", func() {
 			provisionDetails := brokerapi.ProvisionDetails{
 				ServiceID: "non-existing",
@@ -202,6 +205,50 @@ var _ = Describe("Broker", func() {
 			Expect(config.Name).To(Equal("some-instance"))
 			Expect(config.ExposedPorts).To(ConsistOf("1234"))
 			Expect(config.Image).To(Equal("some-image"))
+		})
+	})
+	Context("Deprovision", func() {
+		It("returns an error if the service is missing", func() {
+			deprovisionDetails := brokerapi.DeprovisionDetails{
+				ServiceID: "non-existing",
+			}
+			_, err := blockhead.Deprovision(ctx, "some-instance", deprovisionDetails, false)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(Equal("service not found"))
+		})
+
+		It("returns an error if the plan is missing", func() {
+			deprovisionDetails := brokerapi.DeprovisionDetails{
+				ServiceID: "service-id",
+				PlanID:    "non-existing",
+			}
+			_, err := blockhead.Deprovision(ctx, "some-instance", deprovisionDetails, false)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(Equal("plan not found"))
+		})
+
+		It("Calls the manager's deprovisioner", func() {
+			deprovisionDetails := brokerapi.DeprovisionDetails{
+				ServiceID: "service-id",
+				PlanID:    "plan-id",
+			}
+			_, err := blockhead.Deprovision(ctx, "some-instance", deprovisionDetails, false)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(manager.DeprovisionCallCount()).To(Equal(1))
+
+			_, instanceIDForCall := manager.DeprovisionArgsForCall(0)
+			Expect(instanceIDForCall).To(Equal("some-instance"))
+		})
+		It("Bubbles up errors from the container manager", func() {
+			errorMessage := "docker exploded"
+			manager.DeprovisionReturns(errors.New(errorMessage))
+			deprovisionDetails := brokerapi.DeprovisionDetails{
+				ServiceID: "service-id",
+				PlanID:    "plan-id",
+			}
+			_, err := blockhead.Deprovision(ctx, "some-instance", deprovisionDetails, false)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring(errorMessage))
 		})
 	})
 })

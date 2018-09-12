@@ -84,7 +84,21 @@ func (b BlockheadBroker) Provision(ctx context.Context, instanceID string, detai
 }
 
 func (b BlockheadBroker) Deprovision(ctx context.Context, instanceID string, details brokerapi.DeprovisionDetails, asyncAllowed bool) (brokerapi.DeprovisionServiceSpec, error) {
-	return brokerapi.DeprovisionServiceSpec{}, nil
+	logger := b.logger.Session("deprovision")
+	logger.Info("started")
+	defer logger.Info("finished")
+
+	service := b.state.Services[details.ServiceID]
+	if service == nil {
+		return brokerapi.DeprovisionServiceSpec{}, errors.New("service not found")
+	}
+
+	plan := service.Plans[details.PlanID]
+	if plan == nil {
+		return brokerapi.DeprovisionServiceSpec{}, errors.New("plan not found")
+	}
+
+	return brokerapi.DeprovisionServiceSpec{}, b.manager.Deprovision(ctx, instanceID)
 }
 
 func (b BlockheadBroker) Bind(ctx context.Context, instanceID, bindingID string, details brokerapi.BindDetails) (brokerapi.Binding, error) {

@@ -16,12 +16,12 @@ import (
 )
 
 type FakeDockerClient struct {
-	ImageBuildStub        func(ctx context.Context, reader io.Reader, options types.ImageBuildOptions) (types.ImageBuildResponse, error)
+	ImageBuildStub        func(ctx context.Context, readerName io.Reader, options types.ImageBuildOptions) (types.ImageBuildResponse, error)
 	imageBuildMutex       sync.RWMutex
 	imageBuildArgsForCall []struct {
-		ctx     context.Context
-		reader  io.Reader
-		options types.ImageBuildOptions
+		ctx        context.Context
+		readerName io.Reader
+		options    types.ImageBuildOptions
 	}
 	imageBuildReturns struct {
 		result1 types.ImageBuildResponse
@@ -587,12 +587,12 @@ type FakeDockerClient struct {
 	containerUnpauseReturnsOnCall map[int]struct {
 		result1 error
 	}
-	ContainerUpdateStub        func(ctx context.Context, containerString string, updateConfig container.UpdateConfig) (container.ContainerUpdateOKBody, error)
+	ContainerUpdateStub        func(ctx context.Context, containerName string, updateConfig container.UpdateConfig) (container.ContainerUpdateOKBody, error)
 	containerUpdateMutex       sync.RWMutex
 	containerUpdateArgsForCall []struct {
-		ctx             context.Context
-		containerString string
-		updateConfig    container.UpdateConfig
+		ctx           context.Context
+		containerName string
+		updateConfig  container.UpdateConfig
 	}
 	containerUpdateReturns struct {
 		result1 container.ContainerUpdateOKBody
@@ -666,18 +666,18 @@ type FakeDockerClient struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeDockerClient) ImageBuild(ctx context.Context, reader io.Reader, options types.ImageBuildOptions) (types.ImageBuildResponse, error) {
+func (fake *FakeDockerClient) ImageBuild(ctx context.Context, readerName io.Reader, options types.ImageBuildOptions) (types.ImageBuildResponse, error) {
 	fake.imageBuildMutex.Lock()
 	ret, specificReturn := fake.imageBuildReturnsOnCall[len(fake.imageBuildArgsForCall)]
 	fake.imageBuildArgsForCall = append(fake.imageBuildArgsForCall, struct {
-		ctx     context.Context
-		reader  io.Reader
-		options types.ImageBuildOptions
-	}{ctx, reader, options})
-	fake.recordInvocation("ImageBuild", []interface{}{ctx, reader, options})
+		ctx        context.Context
+		readerName io.Reader
+		options    types.ImageBuildOptions
+	}{ctx, readerName, options})
+	fake.recordInvocation("ImageBuild", []interface{}{ctx, readerName, options})
 	fake.imageBuildMutex.Unlock()
 	if fake.ImageBuildStub != nil {
-		return fake.ImageBuildStub(ctx, reader, options)
+		return fake.ImageBuildStub(ctx, readerName, options)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -694,7 +694,7 @@ func (fake *FakeDockerClient) ImageBuildCallCount() int {
 func (fake *FakeDockerClient) ImageBuildArgsForCall(i int) (context.Context, io.Reader, types.ImageBuildOptions) {
 	fake.imageBuildMutex.RLock()
 	defer fake.imageBuildMutex.RUnlock()
-	return fake.imageBuildArgsForCall[i].ctx, fake.imageBuildArgsForCall[i].reader, fake.imageBuildArgsForCall[i].options
+	return fake.imageBuildArgsForCall[i].ctx, fake.imageBuildArgsForCall[i].readerName, fake.imageBuildArgsForCall[i].options
 }
 
 func (fake *FakeDockerClient) ImageBuildReturns(result1 types.ImageBuildResponse, result2 error) {
@@ -2757,18 +2757,18 @@ func (fake *FakeDockerClient) ContainerUnpauseReturnsOnCall(i int, result1 error
 	}{result1}
 }
 
-func (fake *FakeDockerClient) ContainerUpdate(ctx context.Context, containerString string, updateConfig container.UpdateConfig) (container.ContainerUpdateOKBody, error) {
+func (fake *FakeDockerClient) ContainerUpdate(ctx context.Context, containerName string, updateConfig container.UpdateConfig) (container.ContainerUpdateOKBody, error) {
 	fake.containerUpdateMutex.Lock()
 	ret, specificReturn := fake.containerUpdateReturnsOnCall[len(fake.containerUpdateArgsForCall)]
 	fake.containerUpdateArgsForCall = append(fake.containerUpdateArgsForCall, struct {
-		ctx             context.Context
-		containerString string
-		updateConfig    container.UpdateConfig
-	}{ctx, containerString, updateConfig})
-	fake.recordInvocation("ContainerUpdate", []interface{}{ctx, containerString, updateConfig})
+		ctx           context.Context
+		containerName string
+		updateConfig  container.UpdateConfig
+	}{ctx, containerName, updateConfig})
+	fake.recordInvocation("ContainerUpdate", []interface{}{ctx, containerName, updateConfig})
 	fake.containerUpdateMutex.Unlock()
 	if fake.ContainerUpdateStub != nil {
-		return fake.ContainerUpdateStub(ctx, containerString, updateConfig)
+		return fake.ContainerUpdateStub(ctx, containerName, updateConfig)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -2785,7 +2785,7 @@ func (fake *FakeDockerClient) ContainerUpdateCallCount() int {
 func (fake *FakeDockerClient) ContainerUpdateArgsForCall(i int) (context.Context, string, container.UpdateConfig) {
 	fake.containerUpdateMutex.RLock()
 	defer fake.containerUpdateMutex.RUnlock()
-	return fake.containerUpdateArgsForCall[i].ctx, fake.containerUpdateArgsForCall[i].containerString, fake.containerUpdateArgsForCall[i].updateConfig
+	return fake.containerUpdateArgsForCall[i].ctx, fake.containerUpdateArgsForCall[i].containerName, fake.containerUpdateArgsForCall[i].updateConfig
 }
 
 func (fake *FakeDockerClient) ContainerUpdateReturns(result1 container.ContainerUpdateOKBody, result2 error) {

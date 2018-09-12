@@ -71,4 +71,15 @@ var _ = Describe("DockerManager", func() {
 			Expect(startedContainerName).To(Equal(name))
 		})
 	})
+	Context("Deprovision", func() {
+		It("calls the docker client to stop and remove the specificed container", func() {
+			manager.Deprovision(context.TODO(), containerConfig.Name)
+			Expect(client.ContainerStopCallCount()).To(Equal(1))
+			_, stoppedContainerName, _ := client.ContainerStopArgsForCall(0)
+			Expect(stoppedContainerName).To(Equal(containerConfig.Name))
+			Expect(client.ContainerRemoveCallCount()).To(Equal(1))
+			_, removedContainerName, _ := client.ContainerRemoveArgsForCall(0)
+			Expect(removedContainerName).To(Equal(containerConfig.Name))
+		})
+	})
 })
