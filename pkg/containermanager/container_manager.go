@@ -13,4 +13,5 @@ type ContainerConfig struct {
 //go:generate counterfeiter -o fakes/fake_container_manager.go . ContainerManager
 type ContainerManager interface {
 	Provision(ctx context.Context, cc *ContainerConfig) error
+	Deprovision(ctx context.Context, instanceID string) error
 }

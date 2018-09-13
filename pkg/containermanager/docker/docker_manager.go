@@ -80,6 +80,20 @@ func (dc dockerContainerManager) Provision(ctx context.Context, containerConfig 
 	return nil
 }
 
+func (dc dockerContainerManager) Deprovision(ctx context.Context, instanceID string) error {
+	err := dc.client.ContainerStop(ctx, instanceID, nil)
+	if err != nil {
+		dc.logger.Error("container-stopping-failed", err)
+		return err
+	}
+	err = dc.client.ContainerRemove(ctx, instanceID, types.ContainerRemoveOptions{})
+	if err != nil {
+		dc.logger.Error("container-removal", err)
+		return err
+	}
+	return nil
+}
+
 func createContainerConfig(containerConfig *containermanager.ContainerConfig) (*container.Config, error) {
 	ports, _, err := nat.ParsePortSpecs(containerConfig.ExposedPorts)
 	if err != nil {
