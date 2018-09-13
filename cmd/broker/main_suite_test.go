@@ -89,10 +89,12 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	defer f.Close()
 
 	configPath = f.Name()
+	By("using a temporary configuration file at: " + configPath)
 	cfg := config.Config{
-		Username: "test",
-		Password: "test",
-		Port:     uint16(port),
+		Username:         "test",
+		Password:         "test",
+		Port:             uint16(port),
+		ContainerManager: "docker",
 	}
 	cfgBytes, err := json.Marshal(cfg)
 	_, err = f.Write(cfgBytes)

@@ -1,5 +1,7 @@
 {
-    "username":"",
-    "password":"",
-    "port": 3333
+    "username":"a",
+    "password":"b",
+    "port": 3333,
+    "container-manager": "docker"
 }
+

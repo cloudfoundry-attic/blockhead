@@ -16,9 +16,10 @@ type State struct {
 }
 
 type Config struct {
-	Password string `json:"password,omitempty"`
-	Username string `json:"username,omitempty"`
-	Port     uint16 `json:"port"`
+	Password         string `json:"password,omitempty"`
+	Username         string `json:"username,omitempty"`
+	Port             uint16 `json:"port"`
+	ContainerManager string `json:"container-manager,omitempty"`
 }
 
 type Service struct {
