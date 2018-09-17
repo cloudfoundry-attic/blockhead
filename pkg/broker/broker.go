@@ -74,7 +74,7 @@ func (b BlockheadBroker) Provision(ctx context.Context, instanceID string, detai
 		return brokerapi.ProvisionedServiceSpec{}, errors.New("plan not found")
 	}
 
-	containerConfig := &containermanager.ContainerConfig{
+	containerConfig := containermanager.ContainerConfig{
 		Name:         instanceID,
 		Image:        plan.Image,
 		ExposedPorts: plan.Ports,

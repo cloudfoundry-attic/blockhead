@@ -9,11 +9,11 @@ import (
 )
 
 type FakeContainerManager struct {
-	ProvisionStub        func(ctx context.Context, cc *containermanager.ContainerConfig) error
+	ProvisionStub        func(ctx context.Context, cc containermanager.ContainerConfig) error
 	provisionMutex       sync.RWMutex
 	provisionArgsForCall []struct {
 		ctx context.Context
-		cc  *containermanager.ContainerConfig
+		cc  containermanager.ContainerConfig
 	}
 	provisionReturns struct {
 		result1 error
@@ -37,12 +37,12 @@ type FakeContainerManager struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeContainerManager) Provision(ctx context.Context, cc *containermanager.ContainerConfig) error {
+func (fake *FakeContainerManager) Provision(ctx context.Context, cc containermanager.ContainerConfig) error {
 	fake.provisionMutex.Lock()
 	ret, specificReturn := fake.provisionReturnsOnCall[len(fake.provisionArgsForCall)]
 	fake.provisionArgsForCall = append(fake.provisionArgsForCall, struct {
 		ctx context.Context
-		cc  *containermanager.ContainerConfig
+		cc  containermanager.ContainerConfig
 	}{ctx, cc})
 	fake.recordInvocation("Provision", []interface{}{ctx, cc})
 	fake.provisionMutex.Unlock()
@@ -61,7 +61,7 @@ func (fake *FakeContainerManager) ProvisionCallCount() int {
 	return len(fake.provisionArgsForCall)
 }
 
-func (fake *FakeContainerManager) ProvisionArgsForCall(i int) (context.Context, *containermanager.ContainerConfig) {
+func (fake *FakeContainerManager) ProvisionArgsForCall(i int) (context.Context, containermanager.ContainerConfig) {
 	fake.provisionMutex.RLock()
 	defer fake.provisionMutex.RUnlock()
 	return fake.provisionArgsForCall[i].ctx, fake.provisionArgsForCall[i].cc
