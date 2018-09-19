@@ -30,7 +30,7 @@ func NewDockerContainerManager(logger lager.Logger, client DockerClient) contain
 	}
 }
 
-func (dc dockerContainerManager) Provision(ctx context.Context, containerConfig *containermanager.ContainerConfig) error {
+func (dc dockerContainerManager) Provision(ctx context.Context, containerConfig containermanager.ContainerConfig) error {
 	// do an image pull before provisioning to ensure we have a fresh
 	// version of the image as it may have changed in the background
 	reader, err := dc.client.ImagePull(ctx, containerConfig.Image, types.ImagePullOptions{})
@@ -94,7 +94,7 @@ func (dc dockerContainerManager) Deprovision(ctx context.Context, instanceID str
 	return nil
 }
 
-func createContainerConfig(containerConfig *containermanager.ContainerConfig) (*container.Config, error) {
+func createContainerConfig(containerConfig containermanager.ContainerConfig) (*container.Config, error) {
 	ports, _, err := nat.ParsePortSpecs(containerConfig.ExposedPorts)
 	if err != nil {
 		return nil, err

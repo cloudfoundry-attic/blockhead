@@ -18,7 +18,7 @@ var _ = Describe("DockerManager", func() {
 		manager         containermanager.ContainerManager
 		client          *fakes.FakeDockerClient
 		logger          *lagertest.TestLogger
-		containerConfig *containermanager.ContainerConfig
+		containerConfig containermanager.ContainerConfig
 	)
 
 	BeforeEach(func() {
@@ -26,7 +26,7 @@ var _ = Describe("DockerManager", func() {
 		client = &fakes.FakeDockerClient{}
 		manager = docker.NewDockerContainerManager(logger, client)
 
-		containerConfig = &containermanager.ContainerConfig{
+		containerConfig = containermanager.ContainerConfig{
 			Name:         "some-name",
 			Image:        "some-image",
 			ExposedPorts: []string{"1234", "2345/udp"},

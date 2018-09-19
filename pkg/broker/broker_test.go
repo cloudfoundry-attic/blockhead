@@ -207,6 +207,7 @@ var _ = Describe("Broker", func() {
 			Expect(config.Image).To(Equal("some-image"))
 		})
 	})
+
 	Context("Deprovision", func() {
 		It("returns an error if the service is missing", func() {
 			deprovisionDetails := brokerapi.DeprovisionDetails{
@@ -239,6 +240,7 @@ var _ = Describe("Broker", func() {
 			_, instanceIDForCall := manager.DeprovisionArgsForCall(0)
 			Expect(instanceIDForCall).To(Equal("some-instance"))
 		})
+
 		It("Bubbles up errors from the container manager", func() {
 			errorMessage := "docker exploded"
 			manager.DeprovisionReturns(errors.New(errorMessage))
