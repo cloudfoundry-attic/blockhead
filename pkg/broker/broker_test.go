@@ -7,9 +7,9 @@ import (
 	"code.cloudfoundry.org/lager/lagertest"
 	"github.com/pivotal-cf/brokerapi"
 
-	"github.com/cloudfoundry-incubator/blockhead/fakes"
 	"github.com/cloudfoundry-incubator/blockhead/pkg/broker"
 	"github.com/cloudfoundry-incubator/blockhead/pkg/config"
+	"github.com/cloudfoundry-incubator/blockhead/pkg/fakes"
 	"github.com/cloudfoundry-incubator/blockhead/pkg/utils"
 
 	. "github.com/onsi/ginkgo"

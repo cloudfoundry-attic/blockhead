@@ -5,9 +5,9 @@ import (
 	"errors"
 
 	"code.cloudfoundry.org/lager/lagertest"
-	"github.com/cloudfoundry-incubator/blockhead/fakes"
 	"github.com/cloudfoundry-incubator/blockhead/pkg/containermanager"
 	"github.com/cloudfoundry-incubator/blockhead/pkg/containermanager/docker"
+	"github.com/cloudfoundry-incubator/blockhead/pkg/fakes"
 	"github.com/docker/go-connections/nat"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
