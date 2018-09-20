@@ -1,0 +1,3 @@
+from ethereum/client-go
+EXPOSE 22 8088 50070 8545
+cmd ["--dev","--datadir","/root/datadir","--rpc","--rpcport","8545","--rpcaddr","0.0.0.0","--rpccorsdomain","*","--rpcapi","eth,net,web3,personal,miner,admin,txpool"]
