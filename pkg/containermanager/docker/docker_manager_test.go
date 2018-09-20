@@ -35,7 +35,7 @@ var _ = Describe("DockerManager", func() {
 
 	Context("Provision", func() {
 		It("pulls the image", func() {
-			manager.Provision(context.TODO(), containerConfig)
+			manager.Provision(context.Background(), containerConfig)
 			Expect(client.ImagePullCallCount()).To(Equal(1))
 			_, img, _ := client.ImagePullArgsForCall(0)
 			Expect(img).To(Equal("some-image"))
@@ -45,12 +45,12 @@ var _ = Describe("DockerManager", func() {
 			errorMessage := "potato not found"
 			client.ImagePullReturns(nil, errors.New(errorMessage))
 
-			err := manager.Provision(context.TODO(), containerConfig)
+			err := manager.Provision(context.Background(), containerConfig)
 			Expect(err).To(HaveOccurred())
 		})
 
 		It("creates the container", func() {
-			manager.Provision(context.TODO(), containerConfig)
+			manager.Provision(context.Background(), containerConfig)
 			Expect(client.ContainerCreateCallCount()).To(Equal(1))
 			_, config, hostConfig, networkConfig, name := client.ContainerCreateArgsForCall(0)
 
@@ -63,7 +63,7 @@ var _ = Describe("DockerManager", func() {
 		})
 
 		It("starts the container", func() {
-			manager.Provision(context.TODO(), containerConfig)
+			manager.Provision(context.Background(), containerConfig)
 			Expect(client.ContainerCreateCallCount()).To(Equal(1))
 			_, _, _, _, name := client.ContainerCreateArgsForCall(0)
 			Expect(client.ContainerStartCallCount()).To(Equal(1))
@@ -73,7 +73,7 @@ var _ = Describe("DockerManager", func() {
 	})
 	Context("Deprovision", func() {
 		It("calls the docker client to stop and remove the specificed container", func() {
-			manager.Deprovision(context.TODO(), containerConfig.Name)
+			manager.Deprovision(context.Background(), containerConfig.Name)
 			Expect(client.ContainerStopCallCount()).To(Equal(1))
 			_, stoppedContainerName, _ := client.ContainerStopArgsForCall(0)
 			Expect(stoppedContainerName).To(Equal(containerConfig.Name))
