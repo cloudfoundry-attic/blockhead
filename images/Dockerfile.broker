@@ -4,11 +4,11 @@ copy . .
 run go build -v -o /broker ./cmd/broker
 
 
-from node
+from node:10
 expose 3333
-RUN npm install --production --quiet cli-flags
-RUN npm install --production --quiet web3
-RUN npm install --production --quiet solc
+RUN npm install --production --quiet cli-flags@2.0.7
+RUN npm install --production --quiet web3@1.0.0-beta-36
+RUN npm install --production --quiet solc@0.4.25
 # copy in pusher.js
 # 
 
