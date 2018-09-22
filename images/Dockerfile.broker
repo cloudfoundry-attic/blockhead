@@ -1,10 +1,17 @@
-from golang:1.10-alpine3.8 as builder
+from golang:1.11-alpine3.8 as builder
 workdir /go/src/github.com/cloudfoundry-incubator/blockhead
 copy . .
 run go build -v -o /broker ./cmd/broker
 
-from alpine:3.8
+
+from node:10
 expose 3333
+RUN npm install --production --quiet cli-flags@2.0.7
+RUN npm install --production --quiet web3@1.0.0-beta.36
+RUN npm install --production --quiet solc@0.4.25
+# copy in pusher.js
+# 
+
 copy --from=builder /broker /broker
 copy config.json /config.json
 copy services/ /services/
