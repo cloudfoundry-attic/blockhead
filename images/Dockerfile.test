@@ -1,0 +1,14 @@
+from golang:1.11-alpine3.8 as runner
+
+RUN apk add --update nodejs nodejs-npm
+RUN apk add git gcc libc-dev python make g++
+RUN go get github.com/golang/protobuf/proto
+
+RUN npm install --production --quiet cli-flags@2.0.7
+RUN npm install --production --quiet web3@1.0.0-beta.36
+RUN npm install --production --quiet solc@0.4.25
+
+workdir /go/src/github.com/cloudfoundry-incubator/blockhead
+copy . .
+
+cmd ["go", "test", "-v", "./..."]

@@ -21,6 +21,10 @@ Run the tests:
 
     make test
 
+Run the tests in a docker container:
+
+    make dockertest
+
 To do all the make steps:
 
     make
