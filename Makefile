@@ -1,5 +1,5 @@
 
-all: images build test
+all: images build dockertest
 
 .PHONY: images
 images:
@@ -14,4 +14,4 @@ test:
 
 dockertest:
 	docker build -f images/Dockerfile.test -t blockheads/tests .
-	docker run -v /var/run/docker.sock:/var/run/docker.sock -it blockheads/tests
+	docker run -v /var/run/docker.sock:/var/run/docker.sock -it --rm blockheads/tests

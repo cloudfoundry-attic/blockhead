@@ -1,8 +1,10 @@
 from golang:1.11-alpine3.8 as runner
 
+# node.js for pusher for broker to install contracts
 RUN apk add --update nodejs nodejs-npm
+# git for `npm install`
+# gcc g++ make libc-dev for web3
 RUN apk add git gcc libc-dev python make g++
-RUN go get github.com/golang/protobuf/proto
 
 RUN npm install --production --quiet cli-flags@2.0.7
 RUN npm install --production --quiet web3@1.0.0-beta.36
