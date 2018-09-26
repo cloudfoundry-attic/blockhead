@@ -1,5 +1,5 @@
 
-all: images build dockertest
+all: images build test dockertest
 
 .PHONY: images
 images:
@@ -10,7 +10,7 @@ build:
 	go build -v github.com/cloudfoundry-incubator/blockhead/cmd/broker
 
 test:
-	go test -v ./...
+	ginkgo -r -race -randomizeAllSpecs --randomizeSuites --failOnPending --cover --trace --progress
 
 dockertest:
 	docker build -f images/Dockerfile.test -t blockheads/tests .

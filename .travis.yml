@@ -5,6 +5,10 @@ language: go
 services:
   - docker
 
+script:
+  - go install ./vendor/github.com/onsi/ginkgo/ginkgo
+  - make
+
 go:
   - "1.10.x"
   - "1.11"
