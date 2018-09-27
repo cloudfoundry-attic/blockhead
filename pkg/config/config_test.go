@@ -27,9 +27,10 @@ var _ = Describe("Config", func() {
 				state, err := config.NewState("assets/configs/test_config.json", servicePath)
 
 				expectedConfig := config.Config{
-					Username: "username",
-					Password: "password",
-					Port:     3335,
+					Username:         "username",
+					Password:         "password",
+					Port:             3335,
+					ContainerManager: "docker",
 				}
 
 				Expect(err).NotTo(HaveOccurred())
@@ -55,7 +56,10 @@ var _ = Describe("Config", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				defaultConfig := config.Config{
-					Port: 3333,
+					Username:         "a-username-is-required",
+					Password:         "a-password-is-required",
+					Port:             3333,
+					ContainerManager: "docker",
 				}
 				Expect(state.Config).To(Equal(defaultConfig))
 			})
