@@ -58,7 +58,7 @@ func (e ethereumDeployer) DeployContract(contractInfo *ContractInfo, containerIn
 		Password string   `json:"password"`
 		Args     []string `json:"args"`
 	}{
-		Provider: fmt.Sprintf("http://%s:%s", containerInfo.InternalAddress, portBindings[0].Port),
+		Provider: fmt.Sprintf("http://%s:%s", containerInfo.InternalAddress, "8545"),
 		Password: "",
 		Args:     contractInfo.ContractArgs,
 	}
@@ -74,6 +74,7 @@ func (e ethereumDeployer) DeployContract(contractInfo *ContractInfo, containerIn
 	if err != nil {
 		return nil, err
 	}
+	e.logger.Debug(fmt.Sprintf("%++v", config))
 
 	outputFile, err := ioutil.TempFile("", uuid.New())
 	if err != nil {
@@ -82,6 +83,7 @@ func (e ethereumDeployer) DeployContract(contractInfo *ContractInfo, containerIn
 	defer os.RemoveAll(outputFile.Name())
 
 	cmd := exec.Command("node", e.deployerPath, "-c", configFile.Name(), "-o", outputFile.Name(), contractInfo.ContractPath)
+	e.logger.Debug(fmt.Sprintf("%++v", cmd))
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		e.logger.Error("run-failed", err, lager.Data{"output": string(output)})

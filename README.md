@@ -29,3 +29,8 @@ To do all the make steps:
 
     make
 
+
+
+If both the BOSH release and the k8s release are going to be hooked up
+to the same service-broker platform, `services/eth.json` needs to be
+configured so that the class and plan identities do not collide.

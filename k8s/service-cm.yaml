@@ -1,0 +1,26 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: blockhead-broker-services
+  namespace: default
+data:
+  eth.json: |+
+    {
+        "name": "keth",
+        "description": "Ethereum Geth Node",
+        "tags": [
+            "eth",
+            "geth",
+            "dev"
+        ],
+        "display_name": "Geth 1.8",
+        "plans": [
+            {
+                "name": "free",
+                "free": true,
+                "image": "mhbauer/blockhead-geth:eu2018",
+                "description": "Free Trial",
+                "ports": ["8545"]
+            }
+        ]
+    }

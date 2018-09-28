@@ -19,10 +19,13 @@ type Binding struct {
 	Port string
 }
 
+// internal port to ip:externalport
 type ContainerInfo struct {
 	ExternalAddress string
+	// used for internal communication of broker to container
 	InternalAddress string
-	Bindings        map[string][]Binding
+	// Bindings is a map of container ports to exposed host & port
+	Bindings map[string][]Binding
 }
 
 //go:generate counterfeiter -o ../fakes/fake_container_manager.go . ContainerManager

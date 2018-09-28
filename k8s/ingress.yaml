@@ -1,0 +1,16 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: blockhead-broker
+  namespace: default
+  annotations:
+    ingress.bluemix.net/rewrite-path: "serviceName=blockhead-broker rewrite=/"
+spec:
+  rules:
+  - host: mhb-blockhead-broker.sao01.containers.appdomain.cloud
+    http:
+      paths:
+      - path: "/broker/"
+        backend:
+          serviceName: "blockhead-broker"
+          servicePort: 3333

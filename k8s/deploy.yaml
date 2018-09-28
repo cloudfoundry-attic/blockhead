@@ -1,0 +1,62 @@
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: blockhead-broker
+  namespace: default
+data:
+  config.json: |+
+    {
+        "username":"a",
+        "password":"b",
+        "port": 3333,
+        "deployer_path":"/pusher.js",
+        "container_manager": "kubernetes",
+        "external_address": "peanuts.sng01.containers.appdomain.cloud"
+    }
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: blockhead-broker
+  labels:
+    app: blockhead-broker
+spec:
+  selector:
+    matchLabels:
+      app: blockhead-broker
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: blockhead-broker
+    spec:
+      containers:
+      - name: broker
+        image: mhbauer/blockhead-broker:eu2018
+        command: ["/broker","/config/config.json","/services"]
+        ports:
+        - containerPort: 3333
+        imagePullPolicy: Always
+        volumeMounts:
+          - name: config
+            mountPath: "/config"
+      volumes:
+        - name: config
+          configMap:
+            name: blockhead-broker
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: blockhead-broker
+  name: blockhead-broker
+  namespace: default
+spec:
+  ports:
+  - port: 3333
+    nodePort: 30000
+  selector:
+    app: blockhead-broker
+  type: NodePort
