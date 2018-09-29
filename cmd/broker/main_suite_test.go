@@ -94,6 +94,7 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 		Username:         "test",
 		Password:         "test",
 		Port:             uint16(port),
+		DeployerPath:     filepath.Join(absPath, "pkg", "utils", "pusher.js"),
 		ContainerManager: "docker",
 	}
 	cfgBytes, err := json.Marshal(cfg)
