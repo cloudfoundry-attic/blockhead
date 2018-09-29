@@ -88,7 +88,7 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	for lib, version := range nodeLibVersionMap {
 		cmd := exec.Command("npm", "list", lib)
 		output, err := cmd.CombinedOutput()
-		Expect(err).NotTo(HaveOccurred())
+		Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("Errored when verifying npm modeule: %s", lib))
 		By(fmt.Sprintf("version for node module %s", lib), func() {
 			Expect(output).To(ContainSubstring(version))
 		})
