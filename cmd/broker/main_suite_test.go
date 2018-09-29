@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	"github.com/cloudfoundry-incubator/blockhead/pkg/config"
@@ -17,6 +18,12 @@ import (
 	"github.com/onsi/gomega/gexec"
 
 	"testing"
+)
+
+const (
+	CLI_FLAGS_VERSION = "2.0.7"
+	WEB3_VERSION      = "1.0.0-beta.36"
+	SOLC_VERSION      = "0.4.25"
 )
 
 var (
@@ -72,6 +79,21 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 
 		Expect(len(removedImages)).Should(BeNumerically(">", 0))
 	}
+
+	nodeLibVersionMap := make(map[string]string)
+	nodeLibVersionMap["cli-flags"] = CLI_FLAGS_VERSION
+	nodeLibVersionMap["web3"] = WEB3_VERSION
+	nodeLibVersionMap["solc"] = SOLC_VERSION
+
+	for lib, version := range nodeLibVersionMap {
+		cmd := exec.Command("npm", "list", lib)
+		output, err := cmd.CombinedOutput()
+		Expect(err).NotTo(HaveOccurred())
+		By(fmt.Sprintf("version for node module %s", lib), func() {
+			Expect(output).To(ContainSubstring(version))
+		})
+	}
+
 	return []byte(bytes)
 }, func(data []byte) {
 	sourcePath = "github.com/cloudfoundry-incubator/blockhead"

@@ -25,7 +25,7 @@ var _ = Describe("DockerManager", func() {
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("test")
 		client = &fakes.FakeDockerClient{}
-		manager = docker.NewDockerContainerManager(logger, client, "../../utils/pusher.js")
+		manager = docker.NewDockerContainerManager(logger, client)
 
 		containerConfig = containermanager.ContainerConfig{
 			Name:         "some-name",

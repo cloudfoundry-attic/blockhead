@@ -19,16 +19,14 @@ type DockerClient interface {
 }
 
 type dockerContainerManager struct {
-	client       DockerClient
-	logger       lager.Logger
-	deployerPath string
+	client DockerClient
+	logger lager.Logger
 }
 
-func NewDockerContainerManager(logger lager.Logger, client DockerClient, deployerPath string) containermanager.ContainerManager {
+func NewDockerContainerManager(logger lager.Logger, client DockerClient) containermanager.ContainerManager {
 	return dockerContainerManager{
-		client:       client,
-		logger:       logger.Session("docker-container-manager"),
-		deployerPath: deployerPath,
+		client: client,
+		logger: logger.Session("docker-container-manager"),
 	}
 }
 
