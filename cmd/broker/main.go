@@ -45,6 +45,7 @@ func main() {
 			logger.Fatal("could not set up a docker-client", err)
 		}
 		manager = docker.NewDockerContainerManager(logger, cli)
+		logger.Debug("using docker containermanager")
 	case "kubernetes":
 		config, err := rest.InClusterConfig()
 		if err != nil {
@@ -55,6 +56,7 @@ func main() {
 			logger.Fatal("could not set up a kubernetes-client", err)
 		}
 		manager = kcm.NewKubernetesContainerManager(logger, clientset)
+		logger.Debug("using kubernetes containermanager")
 	default:
 		logger.Fatal("no container manager in config", fmt.Errorf("no config in file %q", configFilepath))
 	}
@@ -66,6 +68,16 @@ func main() {
 	}
 	brokerAPI := brokerapi.New(broker, logger, creds)
 
-	http.Handle("/", brokerAPI)
+	log := func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			info := fmt.Sprintf("method:%q on URL:%q", r.Method, r.URL)
+			logger.Debug("start request" + info)
+			h.ServeHTTP(w, r)
+			logger.Debug("finished" + info)
+		})
+	}
+
+	http.Handle("/", log(brokerAPI))
+	logger.Debug("listening on" + string(state.Config.Port))
 	logger.Fatal("http-listen", http.ListenAndServe(fmt.Sprintf(":%d", state.Config.Port), nil))
 }
