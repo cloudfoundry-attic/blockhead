@@ -3,7 +3,7 @@
 
 An OSBAPI-compatible broker written in golang.
 
-Configure the broker, by setting `username` and `password` in `config.json`.
+Configure the broker, by setting `username` and `password` in `config.json`. Update the `deployer_path` in `config.json` to point to the location of `pusher.js` in `$PWD/pkg/utils/pusher.js`.
 
 Run the broker by doing:
 
