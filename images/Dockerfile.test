@@ -13,4 +13,6 @@ RUN npm install --production --quiet solc@0.4.25
 workdir /go/src/github.com/cloudfoundry-incubator/blockhead
 copy . .
 
-cmd ["go", "test", "-v", "./..."]
+RUN go install ./vendor/github.com/onsi/ginkgo/ginkgo
+
+cmd ["ginkgo", "-r", "-randomizeAllSpecs", "--randomizeSuites", "--keepGoing", "--cover", "--trace", "--progress"]

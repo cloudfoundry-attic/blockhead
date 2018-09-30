@@ -6,8 +6,9 @@ services:
   - docker
 
 script:
-  - go install ./vendor/github.com/onsi/ginkgo/ginkgo
-  - make
+  - make images
+  - make build
+  - make dockertest
 
 go:
   - "1.10.x"

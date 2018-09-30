@@ -18,6 +18,7 @@ import (
 	"github.com/cloudfoundry-incubator/blockhead/pkg/containermanager"
 	"github.com/cloudfoundry-incubator/blockhead/pkg/containermanager/docker"
 	kcm "github.com/cloudfoundry-incubator/blockhead/pkg/containermanager/kubernetes"
+	"github.com/cloudfoundry-incubator/blockhead/pkg/deployer"
 )
 
 func main() {
@@ -37,7 +38,6 @@ func main() {
 	}
 
 	var manager containermanager.ContainerManager
-
 	switch state.Config.ContainerManager {
 	case "docker":
 		cli, err := client.NewEnvClient()
@@ -61,7 +61,8 @@ func main() {
 		logger.Fatal("no container manager in config", fmt.Errorf("no config in file %q", configFilepath))
 	}
 
-	broker := broker.NewBlockheadBroker(logger, state, manager)
+	deployer := deployer.NewEthereumDeployer(logger, state.Config)
+	broker := broker.NewBlockheadBroker(logger, state, manager, deployer)
 	creds := brokerapi.BrokerCredentials{
 		Username: state.Config.Username,
 		Password: state.Config.Password,

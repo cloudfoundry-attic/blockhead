@@ -20,6 +20,7 @@ type Config struct {
 	Username         string `json:"username,omitempty"`
 	Port             uint16 `json:"port"`
 	ContainerManager string `json:"container-manager,omitempty"`
+	DeployerPath     string `json:"deployer_path"`
 }
 
 type Service struct {

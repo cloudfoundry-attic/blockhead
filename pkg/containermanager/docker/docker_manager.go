@@ -94,6 +94,32 @@ func (dc dockerContainerManager) Deprovision(ctx context.Context, instanceID str
 	return nil
 }
 
+func (dc dockerContainerManager) Bind(ctx context.Context, bindingConfig containermanager.BindConfig) (*containermanager.ContainerInfo, error) {
+	containerInfo, err := dc.client.ContainerInspect(ctx, bindingConfig.InstanceId)
+	if err != nil {
+		return nil, err
+	}
+
+	bindings := make(map[string][]containermanager.Binding)
+	for port, dockerBindings := range containerInfo.NetworkSettings.NetworkSettingsBase.Ports {
+		containerBindings := []containermanager.Binding{}
+		for _, dockerBinding := range dockerBindings {
+			containerBindings = append(containerBindings, containermanager.Binding{
+				HostIP: dockerBinding.HostIP,
+				Port:   dockerBinding.HostPort,
+			})
+		}
+		bindings[port.Port()] = containerBindings
+	}
+
+	response := containermanager.ContainerInfo{
+		IP:       containerInfo.NetworkSettings.DefaultNetworkSettings.IPAddress,
+		Bindings: bindings,
+	}
+
+	return &response, nil
+}
+
 func createContainerConfig(containerConfig containermanager.ContainerConfig) (*container.Config, error) {
 	ports, _, err := nat.ParsePortSpecs(containerConfig.ExposedPorts)
 	if err != nil {

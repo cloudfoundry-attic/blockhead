@@ -33,6 +33,20 @@ type FakeContainerManager struct {
 	deprovisionReturnsOnCall map[int]struct {
 		result1 error
 	}
+	BindStub        func(cts context.Context, bc containermanager.BindConfig) (*containermanager.ContainerInfo, error)
+	bindMutex       sync.RWMutex
+	bindArgsForCall []struct {
+		cts context.Context
+		bc  containermanager.BindConfig
+	}
+	bindReturns struct {
+		result1 *containermanager.ContainerInfo
+		result2 error
+	}
+	bindReturnsOnCall map[int]struct {
+		result1 *containermanager.ContainerInfo
+		result2 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -135,6 +149,58 @@ func (fake *FakeContainerManager) DeprovisionReturnsOnCall(i int, result1 error)
 	}{result1}
 }
 
+func (fake *FakeContainerManager) Bind(cts context.Context, bc containermanager.BindConfig) (*containermanager.ContainerInfo, error) {
+	fake.bindMutex.Lock()
+	ret, specificReturn := fake.bindReturnsOnCall[len(fake.bindArgsForCall)]
+	fake.bindArgsForCall = append(fake.bindArgsForCall, struct {
+		cts context.Context
+		bc  containermanager.BindConfig
+	}{cts, bc})
+	fake.recordInvocation("Bind", []interface{}{cts, bc})
+	fake.bindMutex.Unlock()
+	if fake.BindStub != nil {
+		return fake.BindStub(cts, bc)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.bindReturns.result1, fake.bindReturns.result2
+}
+
+func (fake *FakeContainerManager) BindCallCount() int {
+	fake.bindMutex.RLock()
+	defer fake.bindMutex.RUnlock()
+	return len(fake.bindArgsForCall)
+}
+
+func (fake *FakeContainerManager) BindArgsForCall(i int) (context.Context, containermanager.BindConfig) {
+	fake.bindMutex.RLock()
+	defer fake.bindMutex.RUnlock()
+	return fake.bindArgsForCall[i].cts, fake.bindArgsForCall[i].bc
+}
+
+func (fake *FakeContainerManager) BindReturns(result1 *containermanager.ContainerInfo, result2 error) {
+	fake.BindStub = nil
+	fake.bindReturns = struct {
+		result1 *containermanager.ContainerInfo
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeContainerManager) BindReturnsOnCall(i int, result1 *containermanager.ContainerInfo, result2 error) {
+	fake.BindStub = nil
+	if fake.bindReturnsOnCall == nil {
+		fake.bindReturnsOnCall = make(map[int]struct {
+			result1 *containermanager.ContainerInfo
+			result2 error
+		})
+	}
+	fake.bindReturnsOnCall[i] = struct {
+		result1 *containermanager.ContainerInfo
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeContainerManager) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -142,6 +208,8 @@ func (fake *FakeContainerManager) Invocations() map[string][][]interface{} {
 	defer fake.provisionMutex.RUnlock()
 	fake.deprovisionMutex.RLock()
 	defer fake.deprovisionMutex.RUnlock()
+	fake.bindMutex.RLock()
+	defer fake.bindMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

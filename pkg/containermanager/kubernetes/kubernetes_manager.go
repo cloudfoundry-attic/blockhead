@@ -28,3 +28,8 @@ func (kc kubernetesContainerManager) Provision(ctx context.Context, cc container
 func (kc kubernetesContainerManager) Deprovision(ctx context.Context, instanceID string) error {
 	return fmt.Errorf("kube deprovision unimplemented")
 }
+
+func (kc kubernetesContainerManager) Bind(cts context.Context, bc containermanager.BindConfig) (*containermanager.ContainerInfo, error) {
+	kc.logger.Fatal("not-implemented", fmt.Errorf("not implemeneted"))
+	return nil, nil
+}

@@ -23,9 +23,10 @@ import (
 
 var _ = Describe("Blockhead", func() {
 	var (
-		session *gexec.Session
-		args    []string
-		err     error
+		session    *gexec.Session
+		args       []string
+		err        error
+		containers []string
 	)
 
 	Context("when no args are passed in ", func() {
@@ -58,10 +59,18 @@ var _ = Describe("Blockhead", func() {
 
 	Context("when both args are passed in", func() {
 		var (
-			req    *http.Request
 			client *http.Client
 		)
+
+		var newContainerId = func() string {
+			instanceId := uuid.New()
+			containers = append(containers, instanceId)
+			return instanceId
+		}
+
 		BeforeEach(func() {
+			containers = []string{}
+
 			args = []string{
 				configPath,
 				servicePath,
@@ -98,88 +107,9 @@ var _ = Describe("Blockhead", func() {
 				}
 			})
 
-			var requestCatalog = func() *http.Response {
-				catalogURL := fmt.Sprintf("%s/v2/%s", serverAddress, "catalog")
-				req, err = http.NewRequest("GET", catalogURL, nil)
-				Expect(err).NotTo(HaveOccurred())
-				req.SetBasicAuth("test", "test")
-				req.Header.Add("X-Broker-API-Version", "2.0")
-
-				var resp *http.Response
-				Eventually(func() error {
-					resp, err = client.Do(req)
-					return err
-				}).Should(Succeed())
-				return resp
-			}
-
-			var requestProvision = func(serviceId, planId, instanceId string) *http.Response {
-				request := struct {
-					ServiceId string `json:"service_id"`
-					PlanId    string `json:"plan_id"`
-				}{
-					ServiceId: serviceId,
-					PlanId:    planId,
-				}
-
-				payload := new(bytes.Buffer)
-				json.NewEncoder(payload).Encode(request)
-
-				provisionURL := fmt.Sprintf("%s/v2/%s/%s", serverAddress, "service_instances", instanceId)
-				req, err = http.NewRequest("PUT", provisionURL, payload)
-				Expect(err).NotTo(HaveOccurred())
-				req.SetBasicAuth("test", "test")
-				req.Header.Add("X-Broker-API-Version", "2.0")
-				req.Header.Add("Content-Type", "application/json")
-
-				var resp *http.Response
-				Eventually(func() error {
-					resp, err = client.Do(req)
-					return err
-				}).Should(Succeed())
-				return resp
-			}
-
-			var requestDeprovision = func(serviceId, planId, instanceId string) *http.Response {
-				payload := new(bytes.Buffer)
-				json.NewEncoder(payload).Encode("{}")
-
-				deprovisionURL := fmt.Sprintf("%s/v2/%s/%s?service_id=%s&plan_id=%s",
-					serverAddress,
-					"service_instances",
-					instanceId,
-					serviceId,
-					planId,
-				)
-				req, err = http.NewRequest("DELETE", deprovisionURL, payload)
-				Expect(err).NotTo(HaveOccurred())
-				req.SetBasicAuth("test", "test")
-				req.Header.Add("X-Broker-API-Version", "2.0")
-				req.Header.Add("Content-Type", "application/json")
-
-				var resp *http.Response
-				Eventually(func() error {
-					resp, err = client.Do(req)
-					return err
-				}).Should(Succeed())
-				return resp
-			}
-
-			var parseCatalogResponse = func(resp *http.Response) brokerapi.CatalogResponse {
-				defer resp.Body.Close()
-				bytes, _ := ioutil.ReadAll(resp.Body)
-
-				catalog := brokerapi.CatalogResponse{}
-				err = json.Unmarshal(bytes, &catalog)
-				Expect(err).NotTo(HaveOccurred())
-				return catalog
-			}
-
 			Context("with an existing service", func() {
-
 				It("should successfully return service catalog", func() {
-					resp := requestCatalog()
-					Expect(err).NotTo(HaveOccurred())
+					resp := requestCatalog(client)
 					Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 					catalog := parseCatalogResponse(resp)
@@ -192,23 +122,13 @@ var _ = Describe("Blockhead", func() {
 					var (
 						serviceId, planId string
 						cli               *dockerclient.Client
-						containers        []string
 					)
 
-					var newContainerId = func() string {
-						instanceId := uuid.New()
-						containers = append(containers, instanceId)
-						return instanceId
-					}
-
 					BeforeEach(func() {
-						containers = []string{}
-
 						cli, err = dockerclient.NewEnvClient()
 						Expect(err).NotTo(HaveOccurred())
 
-						resp := requestCatalog()
-						Expect(err).NotTo(HaveOccurred())
+						resp := requestCatalog(client)
 						Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 						catalog := parseCatalogResponse(resp)
@@ -220,17 +140,15 @@ var _ = Describe("Blockhead", func() {
 					})
 
 					AfterEach(func() {
-						Expect(err).NotTo(HaveOccurred())
 						for _, containerId := range containers {
 							err = cli.ContainerRemove(context.Background(), containerId, types.ContainerRemoveOptions{Force: true})
+							Expect(err).NotTo(HaveOccurred())
 						}
-						Expect(err).NotTo(HaveOccurred())
 					})
 
 					It("should successfully provision the service", func() {
 						instanceId := newContainerId()
-						resp := requestProvision(serviceId, planId, instanceId)
-						Expect(err).NotTo(HaveOccurred())
+						resp := requestProvision(client, serviceId, planId, instanceId)
 						Expect(resp.StatusCode).To(Equal(http.StatusCreated))
 
 						info, err := cli.ContainerInspect(context.Background(), instanceId)
@@ -241,40 +159,29 @@ var _ = Describe("Blockhead", func() {
 					Context("with an existing node", func() {
 						BeforeEach(func() {
 							existingInstanceId := newContainerId()
-							resp := requestProvision(serviceId, planId, existingInstanceId)
-							Expect(err).NotTo(HaveOccurred())
+							resp := requestProvision(client, serviceId, planId, existingInstanceId)
 							Expect(resp.StatusCode).To(Equal(http.StatusCreated))
 						})
 
 						It("successfully launches a second node", func() {
 							instanceId := newContainerId()
-							resp := requestProvision(serviceId, planId, instanceId)
-							Expect(err).NotTo(HaveOccurred())
+							resp := requestProvision(client, serviceId, planId, instanceId)
 							Expect(resp.StatusCode).To(Equal(http.StatusCreated))
 						})
 					})
 				})
+
 				Context("when deprovisioning", func() {
 					var (
 						instanceId, serviceId, planId string
 						cli                           *dockerclient.Client
-						containers                    []string
 					)
 
-					var newContainerId = func() string {
-						instanceId := uuid.New()
-						containers = append(containers, instanceId)
-						return instanceId
-					}
-
 					BeforeEach(func() {
-						containers = []string{}
-
 						cli, err = dockerclient.NewEnvClient()
 						Expect(err).NotTo(HaveOccurred())
 
-						resp := requestCatalog()
-						Expect(err).NotTo(HaveOccurred())
+						resp := requestCatalog(client)
 						Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 						catalog := parseCatalogResponse(resp)
@@ -285,8 +192,7 @@ var _ = Describe("Blockhead", func() {
 						planId = plan.ID
 
 						instanceId = newContainerId()
-						resp = requestProvision(serviceId, planId, instanceId)
-						Expect(err).NotTo(HaveOccurred())
+						resp = requestProvision(client, serviceId, planId, instanceId)
 						Expect(resp.StatusCode).To(Equal(http.StatusCreated))
 
 						info, err := cli.ContainerInspect(context.Background(), instanceId)
@@ -297,18 +203,187 @@ var _ = Describe("Blockhead", func() {
 					AfterEach(func() {
 						for _, containerId := range containers {
 							err = cli.ContainerRemove(context.Background(), containerId, types.ContainerRemoveOptions{Force: true})
+							Expect(err).To(HaveOccurred())
+							Expect(err.Error()).To(ContainSubstring("No such container"))
 						}
-						Expect(err).To(HaveOccurred())
-						Expect(err.Error()).To(ContainSubstring("No such container"))
 					})
 
 					It("should successfully deprovision the service", func() {
-						resp := requestDeprovision(serviceId, planId, instanceId)
+						resp := requestDeprovision(client, serviceId, planId, instanceId)
 						Expect(err).NotTo(HaveOccurred())
 						Expect(resp.StatusCode).To(Equal(http.StatusOK))
+					})
+				})
+
+				Context("when binding", func() {
+					var (
+						instanceId, serviceId, planId string
+						cli                           *dockerclient.Client
+					)
+
+					BeforeEach(func() {
+						cli, err = dockerclient.NewEnvClient()
+						Expect(err).NotTo(HaveOccurred())
+
+						resp := requestCatalog(client)
+						Expect(resp.StatusCode).To(Equal(http.StatusOK))
+
+						catalog := parseCatalogResponse(resp)
+						service := catalog.Services[0]
+						Expect(service.Plans).To(HaveLen(1))
+						plan := service.Plans[0]
+						serviceId = service.ID
+						planId = plan.ID
+
+						instanceId = newContainerId()
+						resp = requestProvision(client, serviceId, planId, instanceId)
+						Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+
+						info, err := cli.ContainerInspect(context.Background(), instanceId)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(info.Config.ExposedPorts).To(HaveKey(nat.Port("8545/tcp")))
+					})
+
+					AfterEach(func() {
+						for _, containerId := range containers {
+							err = cli.ContainerRemove(context.Background(), containerId, types.ContainerRemoveOptions{Force: true})
+							Expect(err).NotTo(HaveOccurred())
+						}
+					})
+
+					It("should successfully return node information", func() {
+						bindingId := uuid.New()
+						resp := requestBind(client, serviceId, planId, instanceId, bindingId)
+						Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+
+						bindingResults := brokerapi.Binding{}
+						body, err := ioutil.ReadAll(resp.Body)
+						Expect(err).NotTo(HaveOccurred())
+						json.Unmarshal(body, &bindingResults)
+						creds := bindingResults.Credentials.(map[string]interface{})
+						containerInfo := creds["ContainerInfo"].(map[string]interface{})
+						Expect(containerInfo["Bindings"]).To(HaveKey("8545"))
+						nodeInfo := creds["NodeInfo"].(map[string]interface{})
+						Expect(nodeInfo["Account"]).NotTo(Equal(""))
+						Expect(nodeInfo["ContractAddress"]).NotTo(Equal(""))
 					})
 				})
 			})
 		})
 	})
 })
+
+func requestCatalog(client *http.Client) *http.Response {
+	catalogURL := fmt.Sprintf("%s/v2/catalog", serverAddress)
+	req, err := http.NewRequest("GET", catalogURL, nil)
+	Expect(err).NotTo(HaveOccurred())
+	req.SetBasicAuth("test", "test")
+	req.Header.Add("X-Broker-API-Version", "2.0")
+
+	var resp *http.Response
+	Eventually(func() error {
+		resp, err = client.Do(req)
+		return err
+	}).Should(Succeed())
+	return resp
+}
+
+func requestProvision(client *http.Client, serviceId, planId, instanceId string) *http.Response {
+	request := struct {
+		ServiceId string `json:"service_id"`
+		PlanId    string `json:"plan_id"`
+	}{
+		ServiceId: serviceId,
+		PlanId:    planId,
+	}
+
+	payload := new(bytes.Buffer)
+	json.NewEncoder(payload).Encode(request)
+
+	provisionURL := fmt.Sprintf("%s/v2/service_instances/%s", serverAddress, instanceId)
+	req, err := http.NewRequest("PUT", provisionURL, payload)
+	Expect(err).NotTo(HaveOccurred())
+	req.SetBasicAuth("test", "test")
+	req.Header.Add("X-Broker-API-Version", "2.0")
+	req.Header.Add("Content-Type", "application/json")
+
+	var resp *http.Response
+	Eventually(func() error {
+		resp, err = client.Do(req)
+		return err
+	}).Should(Succeed())
+	return resp
+}
+
+func requestDeprovision(client *http.Client, serviceId, planId, instanceId string) *http.Response {
+	payload := new(bytes.Buffer)
+	json.NewEncoder(payload).Encode("{}")
+
+	deprovisionURL := fmt.Sprintf("%s/v2/service_instances/%s?service_id=%s&plan_id=%s",
+		serverAddress,
+		instanceId,
+		serviceId,
+		planId,
+	)
+	req, err := http.NewRequest("DELETE", deprovisionURL, payload)
+	Expect(err).NotTo(HaveOccurred())
+	req.SetBasicAuth("test", "test")
+	req.Header.Add("X-Broker-API-Version", "2.0")
+	req.Header.Add("Content-Type", "application/json")
+
+	var resp *http.Response
+	Eventually(func() error {
+		resp, err = client.Do(req)
+		return err
+	}).Should(Succeed())
+	return resp
+}
+
+func requestBind(client *http.Client, serviceId, planId, instanceId, bindingId string) *http.Response {
+	request := struct {
+		ServiceId string      `json:"service_id"`
+		PlanId    string      `json:"plan_id"`
+		Params    interface{} `json:"parameters"`
+	}{
+		ServiceId: serviceId,
+		PlanId:    planId,
+		Params: struct {
+			ContractUrl  string   `json:"contract_url"`
+			ContractArgs []string `json:"contract_args"`
+		}{
+			ContractUrl:  "https://raw.githubusercontent.com/swetharepakula/hyperledger-fabric-evm-demo/blockhead_demo/poll.sol",
+			ContractArgs: []string{"1"},
+		},
+	}
+
+	payload := new(bytes.Buffer)
+	json.NewEncoder(payload).Encode(request)
+
+	bindURL := fmt.Sprintf("%s/v2/service_instances/%s/service_bindings/%s",
+		serverAddress,
+		instanceId,
+		bindingId,
+	)
+	req, err := http.NewRequest("PUT", bindURL, payload)
+	Expect(err).NotTo(HaveOccurred())
+	req.SetBasicAuth("test", "test")
+	req.Header.Add("X-Broker-API-Version", "2.0")
+	req.Header.Add("Content-Type", "application/json")
+
+	var resp *http.Response
+	Eventually(func() error {
+		resp, err = client.Do(req)
+		return err
+	}).Should(Succeed())
+	return resp
+}
+
+func parseCatalogResponse(resp *http.Response) brokerapi.CatalogResponse {
+	defer resp.Body.Close()
+	bytes, _ := ioutil.ReadAll(resp.Body)
+
+	catalog := brokerapi.CatalogResponse{}
+	err := json.Unmarshal(bytes, &catalog)
+	Expect(err).NotTo(HaveOccurred())
+	return catalog
+}
