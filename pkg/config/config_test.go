@@ -79,6 +79,14 @@ var _ = Describe("Config", func() {
 				})
 			})
 
+			Context("when service directory argument is not a directory", func() {
+				It("errors when services dir is missing", func() {
+					_, err := config.NewState(configPath, configPath)
+					Expect(err).To(HaveOccurred())
+					Expect(err.Error()).To(ContainSubstring("A service directory is expected as the second argument."))
+				})
+			})
+
 			Context("when service directory exists", func() {
 				BeforeEach(func() {
 					servicePath, err = ioutil.TempDir("", "service-dir")
