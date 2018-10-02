@@ -3,6 +3,6 @@
     "password":"b",
     "port": 3333,
     "deployer_path":"",
-    "container-manager": "docker"
+    "container_manager": "docker"
 }
 

@@ -31,6 +31,7 @@ var _ = Describe("Config", func() {
 					Password:         "password",
 					Port:             3335,
 					ContainerManager: "docker",
+					DeployerPath:     "/path/to/pusher.js",
 				}
 
 				Expect(err).NotTo(HaveOccurred())
@@ -60,6 +61,7 @@ var _ = Describe("Config", func() {
 					Password:         "a-password-is-required",
 					Port:             3333,
 					ContainerManager: "docker",
+					DeployerPath:     "/path/to/pusher.js/is/required",
 				}
 				Expect(state.Config).To(Equal(defaultConfig))
 			})

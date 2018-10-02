@@ -10,7 +10,7 @@ RUN npm install --production --quiet cli-flags@2.0.7
 RUN npm install --production --quiet web3@1.0.0-beta.36
 RUN npm install --production --quiet solc@0.4.25
 
-copy --from=builder /go/src/github.com/cloudfoundry-incubator/blockhead/pkg/utils/pusher.js /pusher.js
+copy --from=builder /go/src/github.com/cloudfoundry-incubator/blockhead/pusher.js /pusher.js
 copy --from=builder /broker /broker
 copy config.json /config.json
 copy services/ /services/
