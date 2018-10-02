@@ -59,6 +59,8 @@ var _ = Describe("DockerManager", func() {
 			Expect(config.ExposedPorts).To(HaveKey(nat.Port("1234/tcp")))
 			Expect(config.ExposedPorts).To(HaveKey(nat.Port("2345/udp")))
 			Expect(hostConfig).NotTo(BeNil())
+			Expect(hostConfig.PublishAllPorts).To(BeTrue())
+			Expect(hostConfig.Privileged).To(BeFalse())
 			Expect(networkConfig).NotTo(BeNil())
 			Expect(name).To(Equal("some-name"))
 		})

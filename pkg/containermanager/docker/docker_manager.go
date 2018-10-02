@@ -147,7 +147,7 @@ func createContainerConfig(containerConfig containermanager.ContainerConfig) (*c
 
 func createHostConfig() (*container.HostConfig, error) {
 	hostConfig := &container.HostConfig{
-		PublishAllPorts: false,
+		PublishAllPorts: true,
 		Privileged:      false,
 	}
 	return hostConfig, nil
