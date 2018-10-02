@@ -1,5 +1,5 @@
 {
   "username":"a-username-is-required",
   "password":"a-password-is-required",
-  "container-manager":"docker"
+  "deployer_path":"/path/to/pusher.js/is/required"
 }

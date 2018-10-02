@@ -58,7 +58,7 @@ func main() {
 		manager = kcm.NewKubernetesContainerManager(logger, clientset)
 		logger.Debug("using kubernetes containermanager")
 	default:
-		logger.Fatal("no container manager in config", fmt.Errorf("no config in file %q", configFilepath))
+		logger.Fatal("no container manager in config", fmt.Errorf("no container manager specified in config %q", configFilepath))
 	}
 
 	deployer := deployer.NewEthereumDeployer(logger, state.Config)

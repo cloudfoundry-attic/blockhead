@@ -19,7 +19,7 @@ type Config struct {
 	Password         string `json:"password,omitempty"`
 	Username         string `json:"username,omitempty"`
 	Port             uint16 `json:"port"`
-	ContainerManager string `json:"container-manager,omitempty"`
+	ContainerManager string `json:"container_manager,omitempty"`
 	DeployerPath     string `json:"deployer_path"`
 }
 
@@ -60,6 +60,14 @@ func NewState(configPath string, servicePath string) (*State, error) {
 
 	if config.Port == 0 {
 		config.Port = 3333
+	}
+
+	if config.DeployerPath == "" {
+		return nil, fmt.Errorf("Deployer Path Missing from config")
+	}
+
+	if config.ContainerManager == "" {
+		config.ContainerManager = "docker"
 	}
 
 	if servicePath == "" {
