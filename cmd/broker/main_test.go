@@ -352,7 +352,7 @@ func requestBind(client *http.Client, serviceId, planId, instanceId, bindingId s
 			ContractArgs []string `json:"contract_args"`
 		}{
 			ContractUrl:  "https://raw.githubusercontent.com/swetharepakula/hyperledger-fabric-evm-demo/blockhead_demo/poll.sol",
-			ContractArgs: []string{"1"},
+			ContractArgs: []string{"[1]"},
 		},
 	}
 

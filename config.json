@@ -2,7 +2,7 @@
     "username":"a",
     "password":"b",
     "port": 3333,
-    "deployer_path":"",
+    "deployer_path":"pusher.js",
     "container_manager": "docker"
 }
 

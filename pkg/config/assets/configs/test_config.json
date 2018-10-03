@@ -3,5 +3,6 @@
   "password": "password",
   "port": 3335,
   "container_manager":"docker",
-  "deployer_path": "/path/to/pusher.js"
+  "deployer_path": "/path/to/pusher.js",
+  "external_ip": "1.1.1.1"
 }

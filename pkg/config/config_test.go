@@ -32,6 +32,7 @@ var _ = Describe("Config", func() {
 					Port:             3335,
 					ContainerManager: "docker",
 					DeployerPath:     "/path/to/pusher.js",
+					ExternalIP:       "1.1.1.1",
 				}
 
 				Expect(err).NotTo(HaveOccurred())
@@ -62,6 +63,7 @@ var _ = Describe("Config", func() {
 					Port:             3333,
 					ContainerManager: "docker",
 					DeployerPath:     "/path/to/pusher.js/is/required",
+					ExternalIP:       "127.0.0.1",
 				}
 				Expect(state.Config).To(Equal(defaultConfig))
 			})

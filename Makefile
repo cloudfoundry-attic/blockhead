@@ -14,4 +14,4 @@ test:
 
 dockertest:
 	docker build -f images/Dockerfile.test -t blockheads/tests .
-	docker run -v /var/run/docker.sock:/var/run/docker.sock -it --rm blockheads/tests
+	docker run -v /var/run/docker.sock:/var/run/docker.sock --network host -it --rm blockheads/tests

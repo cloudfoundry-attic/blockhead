@@ -25,7 +25,7 @@ var _ = Describe("DockerManager", func() {
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("test")
 		client = &fakes.FakeDockerClient{}
-		manager = docker.NewDockerContainerManager(logger, client)
+		manager = docker.NewDockerContainerManager(logger, client, "host-ip")
 
 		containerConfig = containermanager.ContainerConfig{
 			Name:         "some-name",
@@ -144,7 +144,7 @@ var _ = Describe("DockerManager", func() {
 					},
 				}
 				expectedBindResponse = &containermanager.ContainerInfo{
-					IP:       "some-ip-address",
+					IP:       "host-ip",
 					Bindings: bindings,
 				}
 			})

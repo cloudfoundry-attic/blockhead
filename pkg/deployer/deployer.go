@@ -2,13 +2,13 @@ package deployer
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
 
 	"code.cloudfoundry.org/lager"
-	"github.com/cloudfoundry-incubator/blockhead/pkg/config"
 	"github.com/cloudfoundry-incubator/blockhead/pkg/containermanager"
 	"github.com/pborman/uuid"
 )
@@ -20,11 +20,11 @@ type ContractInfo struct {
 }
 
 type NodeInfo struct {
-	Account          string `json:"address"`
-	Interface        string `json:"abi"`
-	ConctractAddress string `json:"contract_address"`
-	GasPrice         string `json:"gas_price"`
-	TransactionHash  string `json:"transaction_hash"`
+	Account         string `json:"address"`
+	Interface       string `json:"abi"`
+	ContractAddress string `json:"contract_address"`
+	GasPrice        string `json:"gas_price"`
+	TransactionHash string `json:"transaction_hash"`
 }
 
 //go:generate counterfeiter -o ../fakes/fake_deployer.go . Deployer
@@ -33,14 +33,16 @@ type Deployer interface {
 }
 
 type ethereumDeployer struct {
-	logger lager.Logger
-	config config.Config
+	logger       lager.Logger
+	deployerPath string
+	externalIP   string
 }
 
-func NewEthereumDeployer(logger lager.Logger, config config.Config) Deployer {
+func NewEthereumDeployer(logger lager.Logger, deployerPath string, externalIP string) Deployer {
 	return &ethereumDeployer{
-		logger: logger,
-		config: config,
+		logger:       logger,
+		deployerPath: deployerPath,
+		externalIP:   externalIP,
 	}
 }
 
@@ -48,12 +50,17 @@ func (e ethereumDeployer) DeployContract(contractInfo *ContractInfo, containerIn
 	e.logger.Info("deploy-started")
 	defer e.logger.Info("deploy-finished")
 
+	// 8545 is the port we want from the geth node
+	portBindings := containerInfo.Bindings["8545"]
+	if len(portBindings) <= 0 {
+		return nil, errors.New("Port Bindings do not have 8545 port mapping")
+	}
 	config := struct {
 		Provider string   `json:"provider"`
 		Password string   `json:"password"`
 		Args     []string `json:"args"`
 	}{
-		Provider: fmt.Sprintf("http://%s:%s", containerInfo.IP, "8545"),
+		Provider: fmt.Sprintf("http://%s:%s", e.externalIP, portBindings[0].Port),
 		Password: "",
 		Args:     contractInfo.ContractArgs,
 	}
@@ -76,7 +83,7 @@ func (e ethereumDeployer) DeployContract(contractInfo *ContractInfo, containerIn
 	}
 	defer os.RemoveAll(outputFile.Name())
 
-	cmd := exec.Command("node", e.config.DeployerPath, "-c", configFile.Name(), "-o", outputFile.Name(), contractInfo.ContractPath)
+	cmd := exec.Command("node", e.deployerPath, "-c", configFile.Name(), "-o", outputFile.Name(), contractInfo.ContractPath)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		e.logger.Error("run-failed", err, lager.Data{"output": string(output)})
