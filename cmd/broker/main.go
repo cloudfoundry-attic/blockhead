@@ -61,7 +61,7 @@ func main() {
 		logger.Fatal("no container manager in config", fmt.Errorf("no container manager specified in config %q", configFilepath))
 	}
 
-	deployer := deployer.NewEthereumDeployer(logger, state.Config)
+	deployer := deployer.NewEthereumDeployer(logger, state.Config.DeployerPath)
 	broker := broker.NewBlockheadBroker(logger, state, manager, deployer)
 	creds := brokerapi.BrokerCredentials{
 		Username: state.Config.Username,
