@@ -18,7 +18,7 @@ var _ = Describe("Deployer", func() {
 
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("test")
-		contractDeployer = deployer.NewEthereumDeployer(logger, filepath.Join("assets", "deployer_test.js"))
+		contractDeployer = deployer.NewEthereumDeployer(logger, filepath.Join("assets", "deployer_test.js"), "127.0.0.1")
 	})
 
 	It("runs the specified contract path", func() {

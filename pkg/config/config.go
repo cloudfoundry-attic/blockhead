@@ -20,7 +20,8 @@ type Config struct {
 	Username         string `json:"username,omitempty"`
 	Port             uint16 `json:"port"`
 	ContainerManager string `json:"container_manager,omitempty"`
-	DeployerPath     string `json:"deployer_path"`
+	DeployerPath     string `json:"deployer_path,omitempty"`
+	ExternalIP       string `json:"external_ip,omitempty"`
 }
 
 type Service struct {
@@ -68,6 +69,10 @@ func NewState(configPath string, servicePath string) (*State, error) {
 
 	if config.ContainerManager == "" {
 		config.ContainerManager = "docker"
+	}
+
+	if config.ExternalIP == "" {
+		config.ExternalIP = "127.0.0.1"
 	}
 
 	if servicePath == "" {

@@ -44,7 +44,7 @@ func main() {
 		if err != nil {
 			logger.Fatal("could not set up a docker-client", err)
 		}
-		manager = docker.NewDockerContainerManager(logger, cli)
+		manager = docker.NewDockerContainerManager(logger, cli, state.Config.ExternalIP)
 		logger.Debug("using docker containermanager")
 	case "kubernetes":
 		config, err := rest.InClusterConfig()
@@ -61,7 +61,7 @@ func main() {
 		logger.Fatal("no container manager in config", fmt.Errorf("no container manager specified in config %q", configFilepath))
 	}
 
-	deployer := deployer.NewEthereumDeployer(logger, state.Config.DeployerPath)
+	deployer := deployer.NewEthereumDeployer(logger, state.Config.DeployerPath, state.Config.ExternalIP)
 	broker := broker.NewBlockheadBroker(logger, state, manager, deployer)
 	creds := brokerapi.BrokerCredentials{
 		Username: state.Config.Username,
