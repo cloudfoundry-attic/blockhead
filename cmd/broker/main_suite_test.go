@@ -118,6 +118,7 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 		Port:             uint16(port),
 		DeployerPath:     filepath.Join(absPath, "pusher.js"),
 		ContainerManager: "docker",
+		ExternalAddress:  "127.0.0.1",
 	}
 	cfgBytes, err := json.Marshal(cfg)
 	_, err = f.Write(cfgBytes)

@@ -139,13 +139,13 @@ var _ = Describe("DockerManager", func() {
 				bindings := make(map[string][]containermanager.Binding)
 				bindings["1234"] = []containermanager.Binding{
 					containermanager.Binding{
-						HostIP: "some-host-ip",
-						Port:   "6789",
+						Port: "6789",
 					},
 				}
 				expectedBindResponse = &containermanager.ContainerInfo{
-					IP:       "host-ip",
-					Bindings: bindings,
+					ExternalAddress: "host-ip",
+					InternalAddress: "127.0.0.1",
+					Bindings:        bindings,
 				}
 			})
 

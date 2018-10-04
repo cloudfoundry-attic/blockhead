@@ -16,13 +16,13 @@ type BindConfig struct {
 }
 
 type Binding struct {
-	HostIP string
-	Port   string
+	Port string
 }
 
 type ContainerInfo struct {
-	IP       string
-	Bindings map[string][]Binding
+	ExternalAddress string
+	InternalAddress string
+	Bindings        map[string][]Binding
 }
 
 //go:generate counterfeiter -o ../fakes/fake_container_manager.go . ContainerManager

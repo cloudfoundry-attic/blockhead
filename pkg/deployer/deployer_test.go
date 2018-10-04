@@ -18,7 +18,7 @@ var _ = Describe("Deployer", func() {
 
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("test")
-		contractDeployer = deployer.NewEthereumDeployer(logger, filepath.Join("assets", "deployer_test.js"), "127.0.0.1")
+		contractDeployer = deployer.NewEthereumDeployer(logger, filepath.Join("assets", "deployer_test.js"))
 	})
 
 	It("runs the specified contract path", func() {
@@ -30,13 +30,13 @@ var _ = Describe("Deployer", func() {
 		portBindings := make(map[string][]containermanager.Binding)
 		portBindings["8545"] = []containermanager.Binding{
 			containermanager.Binding{
-				HostIP: "12.34.56.78",
-				Port:   "1234",
+				Port: "1234",
 			},
 		}
 		containerInfo := &containermanager.ContainerInfo{
-			IP:       "12.34.56.78",
-			Bindings: portBindings,
+			InternalAddress: "127.0.0.1",
+			ExternalAddress: "12.34.56.78",
+			Bindings:        portBindings,
 		}
 
 		nodeInfo, err := contractDeployer.DeployContract(contractInfo, containerInfo)

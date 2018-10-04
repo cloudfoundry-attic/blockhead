@@ -35,14 +35,12 @@ type Deployer interface {
 type ethereumDeployer struct {
 	logger       lager.Logger
 	deployerPath string
-	externalIP   string
 }
 
-func NewEthereumDeployer(logger lager.Logger, deployerPath string, externalIP string) Deployer {
+func NewEthereumDeployer(logger lager.Logger, deployerPath string) Deployer {
 	return &ethereumDeployer{
 		logger:       logger,
 		deployerPath: deployerPath,
-		externalIP:   externalIP,
 	}
 }
 
@@ -60,7 +58,7 @@ func (e ethereumDeployer) DeployContract(contractInfo *ContractInfo, containerIn
 		Password string   `json:"password"`
 		Args     []string `json:"args"`
 	}{
-		Provider: fmt.Sprintf("http://%s:%s", e.externalIP, portBindings[0].Port),
+		Provider: fmt.Sprintf("http://%s:%s", containerInfo.InternalAddress, portBindings[0].Port),
 		Password: "",
 		Args:     contractInfo.ContractArgs,
 	}

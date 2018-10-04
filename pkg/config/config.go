@@ -21,7 +21,7 @@ type Config struct {
 	Port             uint16 `json:"port"`
 	ContainerManager string `json:"container_manager,omitempty"`
 	DeployerPath     string `json:"deployer_path,omitempty"`
-	ExternalIP       string `json:"external_ip,omitempty"`
+	ExternalAddress  string `json:"external_address,omitempty"`
 }
 
 type Service struct {
@@ -67,12 +67,12 @@ func NewState(configPath string, servicePath string) (*State, error) {
 		return nil, fmt.Errorf("Deployer Path Missing from config")
 	}
 
-	if config.ContainerManager == "" {
-		config.ContainerManager = "docker"
+	if config.ExternalAddress == "" {
+		return nil, fmt.Errorf("External Address Missing from config")
 	}
 
-	if config.ExternalIP == "" {
-		config.ExternalIP = "127.0.0.1"
+	if config.ContainerManager == "" {
+		config.ContainerManager = "docker"
 	}
 
 	if servicePath == "" {
