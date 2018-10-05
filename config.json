@@ -3,6 +3,7 @@
     "password":"b",
     "port": 3333,
     "deployer_path":"pusher.js",
-    "container_manager": "docker"
+    "container_manager": "docker",
+    "external_address": "127.0.0.1"
 }
 

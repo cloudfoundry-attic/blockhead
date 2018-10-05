@@ -348,14 +348,14 @@ var _ = Describe("Broker", func() {
 						bindings := make(map[string][]containermanager.Binding)
 						bindings["1234"] = []containermanager.Binding{
 							containermanager.Binding{
-								HostIP: "some-host-ip",
-								Port:   "6789",
+								Port: "6789",
 							},
 						}
 
 						expectedContainerInfo = &containermanager.ContainerInfo{
-							IP:       "some-ip",
-							Bindings: bindings,
+							InternalAddress: "127.0.0.1",
+							ExternalAddress: "some-ip",
+							Bindings:        bindings,
 						}
 
 						nodeInfo := &deployer.NodeInfo{

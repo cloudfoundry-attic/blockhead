@@ -19,16 +19,16 @@ type DockerClient interface {
 }
 
 type dockerContainerManager struct {
-	client     DockerClient
-	logger     lager.Logger
-	externalIP string
+	client          DockerClient
+	logger          lager.Logger
+	externalAddress string
 }
 
-func NewDockerContainerManager(logger lager.Logger, client DockerClient, externalIP string) containermanager.ContainerManager {
+func NewDockerContainerManager(logger lager.Logger, client DockerClient, externalAddress string) containermanager.ContainerManager {
 	return dockerContainerManager{
-		client:     client,
-		logger:     logger.Session("docker-container-manager"),
-		externalIP: externalIP,
+		client:          client,
+		logger:          logger.Session("docker-container-manager"),
+		externalAddress: externalAddress,
 	}
 }
 
@@ -107,16 +107,16 @@ func (dc dockerContainerManager) Bind(ctx context.Context, bindingConfig contain
 		containerBindings := []containermanager.Binding{}
 		for _, dockerBinding := range dockerBindings {
 			containerBindings = append(containerBindings, containermanager.Binding{
-				HostIP: dockerBinding.HostIP,
-				Port:   dockerBinding.HostPort,
+				Port: dockerBinding.HostPort,
 			})
 		}
 		bindings[port.Port()] = containerBindings
 	}
 
 	response := containermanager.ContainerInfo{
-		IP:       dc.externalIP,
-		Bindings: bindings,
+		InternalAddress: "127.0.0.1",
+		ExternalAddress: dc.externalAddress,
+		Bindings:        bindings,
 	}
 
 	return &response, nil

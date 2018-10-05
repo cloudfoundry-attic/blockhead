@@ -1,5 +1,6 @@
 {
   "username":"a-username-is-required",
   "password":"a-password-is-required",
-  "deployer_path":"/path/to/pusher.js/is/required"
+  "deployer_path":"/path/to/pusher.js/is/required",
+  "external_address":"127.0.0.1"
 }
