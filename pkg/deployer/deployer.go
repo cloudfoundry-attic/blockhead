@@ -29,7 +29,7 @@ type NodeInfo struct {
 
 //go:generate counterfeiter -o ../fakes/fake_deployer.go . Deployer
 type Deployer interface {
-	DeployContract(contractInfo *ContractInfo, containerInfo *containermanager.ContainerInfo) (*NodeInfo, error)
+	DeployContract(contractInfo *ContractInfo, containerInfo *containermanager.ContainerInfo, nodePort string) (*NodeInfo, error)
 }
 
 type ethereumDeployer struct {
@@ -44,14 +44,14 @@ func NewEthereumDeployer(logger lager.Logger, deployerPath string) Deployer {
 	}
 }
 
-func (e ethereumDeployer) DeployContract(contractInfo *ContractInfo, containerInfo *containermanager.ContainerInfo) (*NodeInfo, error) {
+func (e ethereumDeployer) DeployContract(contractInfo *ContractInfo, containerInfo *containermanager.ContainerInfo, nodePort string) (*NodeInfo, error) {
 	e.logger.Info("deploy-started")
 	defer e.logger.Info("deploy-finished")
 
-	// 8545 is the port we want from the geth node
-	portBindings := containerInfo.Bindings["8545"]
+	// nodePort is the port we want from the blockchain node
+	portBindings := containerInfo.Bindings[nodePort]
 	if len(portBindings) <= 0 {
-		return nil, errors.New("Port Bindings do not have 8545 port mapping")
+		return nil, errors.New(fmt.Sprintf("Port Bindings do not have %s port mapping", nodePort))
 	}
 	config := struct {
 		Provider string   `json:"provider"`
