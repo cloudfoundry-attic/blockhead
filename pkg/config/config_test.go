@@ -140,7 +140,7 @@ var _ = Describe("Config", func() {
 							Name:        "name",
 							Description: "desc",
 							DisplayName: "display-name",
-							Tags:        []string{"eth", "geth"},
+							Tags:        []string{"ethereum", "geth"},
 						}
 
 						expectedPlan := config.Plan{
@@ -172,7 +172,7 @@ var _ = Describe("Config", func() {
 								Name:        "name-2",
 								Description: "desc",
 								DisplayName: "display-name",
-								Tags:        []string{"eth", "geth"},
+								Tags:        []string{"ethereum", "geth"},
 							}
 
 							expectedPlan := config.Plan{
@@ -243,6 +243,20 @@ var _ = Describe("Config", func() {
 								utils.EquivalentService(&expectedService),
 								utils.EquivalentService(&anotherExpectedService),
 							))
+						})
+					})
+
+					Context("when there is a service file with wrong type", func() {
+						BeforeEach(func() {
+							serviceFilePath = fmt.Sprintf("%s/bad_service_config.json", servicePath)
+							copy("assets/bad_services/bad_service_config.json", serviceFilePath)
+						})
+
+						It("should have one service", func() {
+							_, err := config.NewState(configPath, servicePath)
+							Expect(err).To(HaveOccurred())
+							Expect(err.Error()).To(ContainSubstring("Service type not found"))
+							Expect(err.Error()).To(ContainSubstring(serviceFilePath))
 						})
 					})
 				})

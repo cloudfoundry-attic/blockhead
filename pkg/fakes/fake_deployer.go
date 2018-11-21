@@ -9,12 +9,12 @@ import (
 )
 
 type FakeDeployer struct {
-	DeployContractStub        func(contractInfo *deployer.ContractInfo, containerInfo *containermanager.ContainerInfo, nodePort string) (*deployer.NodeInfo, error)
+	DeployContractStub        func(contractInfo *deployer.ContractInfo, containerInfo *containermanager.ContainerInfo, deployConfig deployer.DeployConfig) (*deployer.NodeInfo, error)
 	deployContractMutex       sync.RWMutex
 	deployContractArgsForCall []struct {
 		contractInfo  *deployer.ContractInfo
 		containerInfo *containermanager.ContainerInfo
-		nodePort      string
+		deployConfig  deployer.DeployConfig
 	}
 	deployContractReturns struct {
 		result1 *deployer.NodeInfo
@@ -28,18 +28,18 @@ type FakeDeployer struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeDeployer) DeployContract(contractInfo *deployer.ContractInfo, containerInfo *containermanager.ContainerInfo, nodePort string) (*deployer.NodeInfo, error) {
+func (fake *FakeDeployer) DeployContract(contractInfo *deployer.ContractInfo, containerInfo *containermanager.ContainerInfo, deployConfig deployer.DeployConfig) (*deployer.NodeInfo, error) {
 	fake.deployContractMutex.Lock()
 	ret, specificReturn := fake.deployContractReturnsOnCall[len(fake.deployContractArgsForCall)]
 	fake.deployContractArgsForCall = append(fake.deployContractArgsForCall, struct {
 		contractInfo  *deployer.ContractInfo
 		containerInfo *containermanager.ContainerInfo
-		nodePort      string
-	}{contractInfo, containerInfo, nodePort})
-	fake.recordInvocation("DeployContract", []interface{}{contractInfo, containerInfo, nodePort})
+		deployConfig  deployer.DeployConfig
+	}{contractInfo, containerInfo, deployConfig})
+	fake.recordInvocation("DeployContract", []interface{}{contractInfo, containerInfo, deployConfig})
 	fake.deployContractMutex.Unlock()
 	if fake.DeployContractStub != nil {
-		return fake.DeployContractStub(contractInfo, containerInfo, nodePort)
+		return fake.DeployContractStub(contractInfo, containerInfo, deployConfig)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -53,10 +53,10 @@ func (fake *FakeDeployer) DeployContractCallCount() int {
 	return len(fake.deployContractArgsForCall)
 }
 
-func (fake *FakeDeployer) DeployContractArgsForCall(i int) (*deployer.ContractInfo, *containermanager.ContainerInfo, string) {
+func (fake *FakeDeployer) DeployContractArgsForCall(i int) (*deployer.ContractInfo, *containermanager.ContainerInfo, deployer.DeployConfig) {
 	fake.deployContractMutex.RLock()
 	defer fake.deployContractMutex.RUnlock()
-	return fake.deployContractArgsForCall[i].contractInfo, fake.deployContractArgsForCall[i].containerInfo, fake.deployContractArgsForCall[i].nodePort
+	return fake.deployContractArgsForCall[i].contractInfo, fake.deployContractArgsForCall[i].containerInfo, fake.deployContractArgsForCall[i].deployConfig
 }
 
 func (fake *FakeDeployer) DeployContractReturns(result1 *deployer.NodeInfo, result2 error) {

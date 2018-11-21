@@ -83,11 +83,11 @@ var _ = Describe("Blockhead", func() {
 		})
 
 		Context("Service", func() {
-			var expectedService brokerapi.Service
+			var expectedETHService, expectedFabricService brokerapi.Service
 
 			BeforeEach(func() {
 				True := true
-				expectedService = brokerapi.Service{
+				expectedETHService = brokerapi.Service{
 					ID:          "not-checked-in-service-matcher",
 					Name:        "eth",
 					Description: "Ethereum Geth Node",
@@ -105,25 +105,45 @@ var _ = Describe("Blockhead", func() {
 						},
 					},
 				}
+
+				expectedFabricService = brokerapi.Service{
+					ID:          "not-checked",
+					Name:        "fab3",
+					Description: "Hyperledger Fabric Proxy",
+					Bindable:    true,
+					Tags:        []string{"fabric", "proxy", "evm"},
+					Metadata: &brokerapi.ServiceMetadata{
+						DisplayName: "Fabric Proxy 0.1",
+					},
+					Plans: []brokerapi.ServicePlan{
+						brokerapi.ServicePlan{
+							ID:          "not-checked",
+							Name:        "free",
+							Description: "Free Trial",
+							Free:        &True,
+						},
+					},
+				}
 			})
 
 			Context("with an existing service", func() {
+				var (
+					serviceId, planId string
+					cli               *dockerclient.Client
+				)
+
 				It("should successfully return service catalog", func() {
 					resp := requestCatalog(client)
 					Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 					catalog := parseCatalogResponse(resp)
 					Expect(catalog.Services).To(ConsistOf(
-						utils.EquivalentBrokerAPIService(expectedService)),
-					)
+						utils.EquivalentBrokerAPIService(expectedETHService),
+						utils.EquivalentBrokerAPIService(expectedFabricService),
+					))
 				})
 
-				Context("when provisioning", func() {
-					var (
-						serviceId, planId string
-						cli               *dockerclient.Client
-					)
-
+				Context("for ethereum service", func() {
 					BeforeEach(func() {
 						cli, err = dockerclient.NewEnvClient()
 						Expect(err).NotTo(HaveOccurred())
@@ -132,51 +152,126 @@ var _ = Describe("Blockhead", func() {
 						Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 						catalog := parseCatalogResponse(resp)
-						service := catalog.Services[0]
+
+						var service *brokerapi.Service
+						for _, s := range catalog.Services {
+							if contains(s.Tags, "eth") {
+								service = &s
+								break
+							}
+						}
+						Expect(service).NotTo(BeNil())
 						Expect(service.Plans).To(HaveLen(1))
 						plan := service.Plans[0]
 						serviceId = service.ID
 						planId = plan.ID
 					})
 
-					AfterEach(func() {
-						for _, containerId := range containers {
-							err = cli.ContainerRemove(context.Background(), containerId, types.ContainerRemoveOptions{Force: true})
-							Expect(err).NotTo(HaveOccurred())
-						}
-					})
-
-					It("should successfully provision the service", func() {
-						instanceId := newContainerId()
-						resp := requestProvision(client, serviceId, planId, instanceId)
-						Expect(resp.StatusCode).To(Equal(http.StatusCreated))
-
-						info, err := cli.ContainerInspect(context.Background(), instanceId)
-						Expect(err).NotTo(HaveOccurred())
-						Expect(info.Config.ExposedPorts).To(HaveKey(nat.Port("8545/tcp")))
-					})
-
-					Context("with an existing node", func() {
-						BeforeEach(func() {
-							existingInstanceId := newContainerId()
-							resp := requestProvision(client, serviceId, planId, existingInstanceId)
-							Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+					Context("when provisioning", func() {
+						AfterEach(func() {
+							for _, containerId := range containers {
+								err = cli.ContainerRemove(context.Background(), containerId, types.ContainerRemoveOptions{Force: true})
+								Expect(err).NotTo(HaveOccurred())
+							}
 						})
 
-						It("successfully launches a second node", func() {
+						It("should successfully provision the service", func() {
 							instanceId := newContainerId()
 							resp := requestProvision(client, serviceId, planId, instanceId)
 							Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+
+							info, err := cli.ContainerInspect(context.Background(), instanceId)
+							Expect(err).NotTo(HaveOccurred())
+							Expect(info.Config.ExposedPorts).To(HaveKey(nat.Port("8545/tcp")))
+						})
+
+						Context("with an existing node", func() {
+							BeforeEach(func() {
+								existingInstanceId := newContainerId()
+								resp := requestProvision(client, serviceId, planId, existingInstanceId)
+								Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+							})
+
+							It("successfully launches a second node", func() {
+								instanceId := newContainerId()
+								resp := requestProvision(client, serviceId, planId, instanceId)
+								Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+							})
+						})
+					})
+
+					Context("when deprovisioning", func() {
+						var (
+							instanceId string
+						)
+
+						BeforeEach(func() {
+							instanceId = newContainerId()
+							resp := requestProvision(client, serviceId, planId, instanceId)
+							Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+
+							info, err := cli.ContainerInspect(context.Background(), instanceId)
+							Expect(err).NotTo(HaveOccurred())
+							Expect(info.Config.ExposedPorts).To(HaveKey(nat.Port("8545/tcp")))
+						})
+
+						AfterEach(func() {
+							for _, containerId := range containers {
+								err = cli.ContainerRemove(context.Background(), containerId, types.ContainerRemoveOptions{Force: true})
+								Expect(err).To(HaveOccurred())
+								Expect(err.Error()).To(ContainSubstring("No such container"))
+							}
+						})
+
+						It("should successfully deprovision the service", func() {
+							resp := requestDeprovision(client, serviceId, planId, instanceId)
+							Expect(err).NotTo(HaveOccurred())
+							Expect(resp.StatusCode).To(Equal(http.StatusOK))
+						})
+					})
+
+					Context("when binding", func() {
+						var (
+							instanceId string
+						)
+
+						BeforeEach(func() {
+							instanceId = newContainerId()
+							resp := requestProvision(client, serviceId, planId, instanceId)
+							Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+
+							info, err := cli.ContainerInspect(context.Background(), instanceId)
+							Expect(err).NotTo(HaveOccurred())
+							Expect(info.Config.ExposedPorts).To(HaveKey(nat.Port("8545/tcp")))
+						})
+
+						AfterEach(func() {
+							for _, containerId := range containers {
+								err = cli.ContainerRemove(context.Background(), containerId, types.ContainerRemoveOptions{Force: true})
+								Expect(err).NotTo(HaveOccurred())
+							}
+						})
+
+						It("should successfully return node information", func() {
+							bindingId := uuid.New()
+							resp := requestBind(client, serviceId, planId, instanceId, bindingId)
+							Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+
+							bindingResults := brokerapi.Binding{}
+							body, err := ioutil.ReadAll(resp.Body)
+							Expect(err).NotTo(HaveOccurred())
+							json.Unmarshal(body, &bindingResults)
+							creds := bindingResults.Credentials.(map[string]interface{})
+							containerInfo := creds["ContainerInfo"].(map[string]interface{})
+							Expect(containerInfo["Bindings"]).To(HaveKey("8545"))
+							nodeInfo := creds["NodeInfo"].(map[string]interface{})
+							Expect(nodeInfo["Account"]).NotTo(Equal(""))
+							Expect(nodeInfo["ContractAddress"]).NotTo(Equal(""))
 						})
 					})
 				})
 
-				Context("when deprovisioning", func() {
-					var (
-						instanceId, serviceId, planId string
-						cli                           *dockerclient.Client
-					)
-
+				FContext("for fabric service", func() {
 					BeforeEach(func() {
 						cli, err = dockerclient.NewEnvClient()
 						Expect(err).NotTo(HaveOccurred())
@@ -185,87 +280,124 @@ var _ = Describe("Blockhead", func() {
 						Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 						catalog := parseCatalogResponse(resp)
-						service := catalog.Services[0]
-						Expect(service.Plans).To(HaveLen(1))
-						plan := service.Plans[0]
-						serviceId = service.ID
-						planId = plan.ID
 
-						instanceId = newContainerId()
-						resp = requestProvision(client, serviceId, planId, instanceId)
-						Expect(resp.StatusCode).To(Equal(http.StatusCreated))
-
-						info, err := cli.ContainerInspect(context.Background(), instanceId)
-						Expect(err).NotTo(HaveOccurred())
-						Expect(info.Config.ExposedPorts).To(HaveKey(nat.Port("8545/tcp")))
-					})
-
-					AfterEach(func() {
-						for _, containerId := range containers {
-							err = cli.ContainerRemove(context.Background(), containerId, types.ContainerRemoveOptions{Force: true})
-							Expect(err).To(HaveOccurred())
-							Expect(err.Error()).To(ContainSubstring("No such container"))
+						var service *brokerapi.Service
+						for _, s := range catalog.Services {
+							if contains(s.Tags, "fabric") {
+								service = &s
+								break
+							}
 						}
-					})
-
-					It("should successfully deprovision the service", func() {
-						resp := requestDeprovision(client, serviceId, planId, instanceId)
-						Expect(err).NotTo(HaveOccurred())
-						Expect(resp.StatusCode).To(Equal(http.StatusOK))
-					})
-				})
-
-				Context("when binding", func() {
-					var (
-						instanceId, serviceId, planId string
-						cli                           *dockerclient.Client
-					)
-
-					BeforeEach(func() {
-						cli, err = dockerclient.NewEnvClient()
-						Expect(err).NotTo(HaveOccurred())
-
-						resp := requestCatalog(client)
-						Expect(resp.StatusCode).To(Equal(http.StatusOK))
-
-						catalog := parseCatalogResponse(resp)
-						service := catalog.Services[0]
+						Expect(service).NotTo(BeNil())
 						Expect(service.Plans).To(HaveLen(1))
 						plan := service.Plans[0]
 						serviceId = service.ID
 						planId = plan.ID
-
-						instanceId = newContainerId()
-						resp = requestProvision(client, serviceId, planId, instanceId)
-						Expect(resp.StatusCode).To(Equal(http.StatusCreated))
-
-						info, err := cli.ContainerInspect(context.Background(), instanceId)
-						Expect(err).NotTo(HaveOccurred())
-						Expect(info.Config.ExposedPorts).To(HaveKey(nat.Port("8545/tcp")))
 					})
 
-					AfterEach(func() {
-						for _, containerId := range containers {
-							err = cli.ContainerRemove(context.Background(), containerId, types.ContainerRemoveOptions{Force: true})
+					Context("when provisioning", func() {
+						AfterEach(func() {
+							for _, containerId := range containers {
+								err = cli.ContainerRemove(context.Background(), containerId, types.ContainerRemoveOptions{Force: true})
+								Expect(err).NotTo(HaveOccurred())
+							}
+						})
+
+						It("should successfully provision the service", func() {
+							instanceId := newContainerId()
+							resp := requestProvision(client, serviceId, planId, instanceId)
+							Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+
+							info, err := cli.ContainerInspect(context.Background(), instanceId)
 							Expect(err).NotTo(HaveOccurred())
-						}
+							Expect(info.Config.ExposedPorts).To(HaveKey(nat.Port("5000/tcp")))
+						})
+
+						Context("with an existing node", func() {
+							BeforeEach(func() {
+								existingInstanceId := newContainerId()
+								resp := requestProvision(client, serviceId, planId, existingInstanceId)
+								Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+							})
+
+							It("successfully launches a second node", func() {
+								instanceId := newContainerId()
+								resp := requestProvision(client, serviceId, planId, instanceId)
+								Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+							})
+						})
 					})
 
-					It("should successfully return node information", func() {
-						bindingId := uuid.New()
-						resp := requestBind(client, serviceId, planId, instanceId, bindingId)
-						Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+					Context("when deprovisioning", func() {
+						var (
+							instanceId string
+							cli        *dockerclient.Client
+						)
 
-						bindingResults := brokerapi.Binding{}
-						body, err := ioutil.ReadAll(resp.Body)
-						Expect(err).NotTo(HaveOccurred())
-						json.Unmarshal(body, &bindingResults)
-						creds := bindingResults.Credentials.(map[string]interface{})
-						containerInfo := creds["ContainerInfo"].(map[string]interface{})
-						Expect(containerInfo["Bindings"]).To(HaveKey("8545"))
-						nodeInfo := creds["NodeInfo"].(map[string]interface{})
-						Expect(nodeInfo["Account"]).NotTo(Equal(""))
-						Expect(nodeInfo["ContractAddress"]).NotTo(Equal(""))
+						BeforeEach(func() {
+							instanceId = newContainerId()
+							resp := requestProvision(client, serviceId, planId, instanceId)
+							Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+
+							info, err := cli.ContainerInspect(context.Background(), instanceId)
+							Expect(err).NotTo(HaveOccurred())
+							Expect(info.Config.ExposedPorts).To(HaveKey(nat.Port("5000/tcp")))
+						})
+
+						AfterEach(func() {
+							for _, containerId := range containers {
+								err = cli.ContainerRemove(context.Background(), containerId, types.ContainerRemoveOptions{Force: true})
+								Expect(err).To(HaveOccurred())
+								Expect(err.Error()).To(ContainSubstring("No such container"))
+							}
+						})
+
+						It("should successfully deprovision the service", func() {
+							resp := requestDeprovision(client, serviceId, planId, instanceId)
+							Expect(err).NotTo(HaveOccurred())
+							Expect(resp.StatusCode).To(Equal(http.StatusOK))
+						})
+					})
+
+					Context("when binding", func() {
+						var (
+							instanceId, serviceId, planId string
+							cli                           *dockerclient.Client
+						)
+
+						BeforeEach(func() {
+							instanceId = newContainerId()
+							resp := requestProvision(client, serviceId, planId, instanceId)
+							Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+
+							info, err := cli.ContainerInspect(context.Background(), instanceId)
+							Expect(err).NotTo(HaveOccurred())
+							Expect(info.Config.ExposedPorts).To(HaveKey(nat.Port("5000/tcp")))
+						})
+
+						AfterEach(func() {
+							for _, containerId := range containers {
+								err = cli.ContainerRemove(context.Background(), containerId, types.ContainerRemoveOptions{Force: true})
+								Expect(err).NotTo(HaveOccurred())
+							}
+						})
+
+						It("should successfully return node information", func() {
+							bindingId := uuid.New()
+							resp := requestBind(client, serviceId, planId, instanceId, bindingId)
+							Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+
+							bindingResults := brokerapi.Binding{}
+							body, err := ioutil.ReadAll(resp.Body)
+							Expect(err).NotTo(HaveOccurred())
+							json.Unmarshal(body, &bindingResults)
+							creds := bindingResults.Credentials.(map[string]interface{})
+							containerInfo := creds["ContainerInfo"].(map[string]interface{})
+							Expect(containerInfo["Bindings"]).To(HaveKey("8545"))
+							nodeInfo := creds["NodeInfo"].(map[string]interface{})
+							Expect(nodeInfo["Account"]).NotTo(Equal(""))
+							Expect(nodeInfo["ContractAddress"]).NotTo(Equal(""))
+						})
 					})
 				})
 			})
@@ -386,4 +518,13 @@ func parseCatalogResponse(resp *http.Response) brokerapi.CatalogResponse {
 	err := json.Unmarshal(bytes, &catalog)
 	Expect(err).NotTo(HaveOccurred())
 	return catalog
+}
+
+func contains(array []string, elem string) bool {
+	for _, v := range array {
+		if v == elem {
+			return true
+		}
+	}
+	return false
 }

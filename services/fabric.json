@@ -1,0 +1,20 @@
+{
+    "name": "fab3",
+    "type": "fabric",
+    "description": "Hyperledger Fabric Proxy",
+    "tags": [
+        "fabric",
+        "proxy",
+        "evm"
+    ],
+    "display_name": "Fabric Proxy 0.1",
+    "plans": [
+        {
+            "name": "free",
+            "free": true,
+            "image": "nimak/evm-proxy:latest",
+            "description": "Free Trial",
+            "ports": ["5000"]
+        }
+    ]
+}

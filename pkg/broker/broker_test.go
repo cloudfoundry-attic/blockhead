@@ -44,6 +44,7 @@ var _ = Describe("Broker", func() {
 
 		service := config.Service{
 			Name:        "eth",
+			Type:        config.ETHEREUM,
 			Description: "desc",
 			DisplayName: "display-name",
 			Tags:        []string{"eth", "geth"},
@@ -389,10 +390,11 @@ var _ = Describe("Broker", func() {
 
 						// testing the args for call inside the stub since we delete the
 						// contract file as part of the cleanup and after binding is done
-						fakeDeployer.DeployContractStub = func(contractInfo *deployer.ContractInfo, containerInfo *containermanager.ContainerInfo, nodePort string) (*deployer.NodeInfo, error) {
+						fakeDeployer.DeployContractStub = func(contractInfo *deployer.ContractInfo, containerInfo *containermanager.ContainerInfo, deployConfig deployer.DeployConfig) (*deployer.NodeInfo, error) {
 							Expect(contractInfo.ContractPath).To(BeAnExistingFile())
 							Expect(containerInfo).To(Equal(expectedContainerInfo))
-							Expect(nodePort).To(Equal("1234"))
+							Expect(deployConfig.NodePort).To(Equal("1234"))
+							Expect(deployConfig.NodeType).To(Equal(config.ETHEREUM))
 							return nil, nil
 						}
 					})

@@ -2,7 +2,7 @@
     "name": "name-2",
     "description": "desc",
     "tags": [
-        "eth",
+        "ethereum",
         "geth"
     ],
     "display_name": "display-name",
