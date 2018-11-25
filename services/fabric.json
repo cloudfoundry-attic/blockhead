@@ -1,6 +1,5 @@
 {
     "name": "fab3",
-    "type": "fabric",
     "description": "Hyperledger Fabric Proxy",
     "tags": [
         "fabric",

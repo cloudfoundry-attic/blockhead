@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"syscall"
 
 	"code.cloudfoundry.org/lager"
 	"github.com/cloudfoundry-incubator/blockhead/pkg/config"
@@ -83,6 +84,8 @@ func (e ethereumDeployer) DeployContract(contractInfo *ContractInfo, containerIn
 		return nil, err
 	}
 
+	e.logger.Info("push-configuration", lager.Data{"config": string(configJson)})
+
 	outputFile, err := ioutil.TempFile("", uuid.New())
 	if err != nil {
 		return nil, err
@@ -92,7 +95,13 @@ func (e ethereumDeployer) DeployContract(contractInfo *ContractInfo, containerIn
 	cmd := exec.Command("node", e.deployerPath, "-c", configFile.Name(), "-o", outputFile.Name(), contractInfo.ContractPath)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		e.logger.Error("run-failed", err, lager.Data{"output": string(output)})
+		if exiterr, ok := err.(*exec.ExitError); ok {
+			if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
+				e.logger.Error("exitted-with-status", err, lager.Data{"code": status.ExitStatus(), "output": string(output)})
+			}
+		} else {
+			e.logger.Error("cmd-wait-failed", err, lager.Data{"output": string(output)})
+		}
 		return nil, err
 	}
 

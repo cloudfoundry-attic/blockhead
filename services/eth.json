@@ -1,6 +1,5 @@
 {
     "name": "eth",
-    "type": "ethereum",
     "description": "Ethereum Geth Node",
     "tags": [
         "ethereum",
