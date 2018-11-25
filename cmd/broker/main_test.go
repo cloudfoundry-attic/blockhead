@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"os/exec"
 
 	"github.com/cloudfoundry-incubator/blockhead/pkg/utils"
@@ -60,6 +61,7 @@ var _ = Describe("Blockhead", func() {
 	Context("when both args are passed in", func() {
 		var (
 			client *http.Client
+			cmd    *exec.Cmd
 		)
 
 		var newContainerId = func() string {
@@ -77,9 +79,13 @@ var _ = Describe("Blockhead", func() {
 			}
 			client = &http.Client{}
 
-			cmd := exec.Command(brokerBinPath, args...)
+			cmd = exec.Command(brokerBinPath, args...)
 			session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 			Expect(err).ToNot(HaveOccurred())
+		})
+
+		AfterEach(func() {
+			cmd.Process.Signal(os.Kill)
 		})
 
 		Context("Service", func() {
@@ -92,7 +98,7 @@ var _ = Describe("Blockhead", func() {
 					Name:        "eth",
 					Description: "Ethereum Geth Node",
 					Bindable:    true,
-					Tags:        []string{"eth", "geth", "dev"},
+					Tags:        []string{"ethereum", "geth", "dev"},
 					Metadata: &brokerapi.ServiceMetadata{
 						DisplayName: "Geth 1.8",
 					},
@@ -155,7 +161,7 @@ var _ = Describe("Blockhead", func() {
 
 						var service *brokerapi.Service
 						for _, s := range catalog.Services {
-							if contains(s.Tags, "eth") {
+							if contains(s.Tags, "ethereum") {
 								service = &s
 								break
 							}
@@ -271,7 +277,7 @@ var _ = Describe("Blockhead", func() {
 					})
 				})
 
-				FContext("for fabric service", func() {
+				Context("for fabric service", func() {
 					BeforeEach(func() {
 						cli, err = dockerclient.NewEnvClient()
 						Expect(err).NotTo(HaveOccurred())
@@ -331,7 +337,6 @@ var _ = Describe("Blockhead", func() {
 					Context("when deprovisioning", func() {
 						var (
 							instanceId string
-							cli        *dockerclient.Client
 						)
 
 						BeforeEach(func() {
@@ -361,8 +366,7 @@ var _ = Describe("Blockhead", func() {
 
 					Context("when binding", func() {
 						var (
-							instanceId, serviceId, planId string
-							cli                           *dockerclient.Client
+							instanceId string
 						)
 
 						BeforeEach(func() {
@@ -393,7 +397,7 @@ var _ = Describe("Blockhead", func() {
 							json.Unmarshal(body, &bindingResults)
 							creds := bindingResults.Credentials.(map[string]interface{})
 							containerInfo := creds["ContainerInfo"].(map[string]interface{})
-							Expect(containerInfo["Bindings"]).To(HaveKey("8545"))
+							Expect(containerInfo["Bindings"]).To(HaveKey("5000"))
 							nodeInfo := creds["NodeInfo"].(map[string]interface{})
 							Expect(nodeInfo["Account"]).NotTo(Equal(""))
 							Expect(nodeInfo["ContractAddress"]).NotTo(Equal(""))

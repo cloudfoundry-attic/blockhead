@@ -22,8 +22,8 @@ import (
 
 const (
 	CLI_FLAGS_VERSION = "2.0.7"
-	WEB3_VERSION      = "1.0.0-beta.34"
-	SOLC_VERSION      = "0.4.22"
+	WEB3_VERSION      = "1.0.0-beta.36"
+	SOLC_VERSION      = "0.4.25"
 )
 
 var (

@@ -3,7 +3,7 @@
     "type": "ethereum",
     "description": "Ethereum Geth Node",
     "tags": [
-        "eth",
+        "ethereum",
         "geth",
         "dev"
     ],
