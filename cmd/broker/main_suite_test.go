@@ -52,11 +52,11 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	Expect(err).NotTo(HaveOccurred())
 
 	// Deleting this image so that integration tests will fail if broker never pulls the image down.
-	// The image being used is shown in eth.json as `nimak/eth-dev`. We only delete latest so other tagged
+	// The image being used is shown in eth.json as `nimak/geth`. We only delete latest so other tagged
 	// images are unaffected
 	jsonString := `{
 			"reference":{
-				"nimak/eth-dev:latest": true
+				"nimak/geth:latest": true
 		}
 	}
 	`

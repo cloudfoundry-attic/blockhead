@@ -11,7 +11,7 @@
         {
             "name": "free",
             "free": true,
-            "image": "nimak/eth-dev:latest",
+            "image": "nimak/geth:latest",
             "description": "Free Trial",
             "ports": ["8545"]
         }
