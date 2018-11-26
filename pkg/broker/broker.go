@@ -158,7 +158,7 @@ func (b BlockheadBroker) Bind(ctx context.Context, instanceID, bindingID string,
 		return brokerapi.Binding{}, err
 	}
 
-	nodeInfo, err := b.deployer.DeployContract(contractInfo, containerInfo)
+	nodeInfo, err := b.deployer.DeployContract(contractInfo, containerInfo, plan.Ports[0])
 	if err != nil {
 		return brokerapi.Binding{}, err
 	}

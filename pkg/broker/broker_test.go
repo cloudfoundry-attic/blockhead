@@ -386,9 +386,13 @@ var _ = Describe("Broker", func() {
 						_, err := blockhead.Bind(context.TODO(), "some-instance", "some-binding-id", bindDetails)
 						Expect(err).NotTo(HaveOccurred())
 						Expect(fakeDeployer.DeployContractCallCount()).To(Equal(1))
-						fakeDeployer.DeployContractStub = func(contractInfo *deployer.ContractInfo, containerInfo *containermanager.ContainerInfo) (*deployer.NodeInfo, error) {
+
+						// testing the args for call inside the stub since we delete the
+						// contract file as part of the cleanup and after binding is done
+						fakeDeployer.DeployContractStub = func(contractInfo *deployer.ContractInfo, containerInfo *containermanager.ContainerInfo, nodePort string) (*deployer.NodeInfo, error) {
 							Expect(contractInfo.ContractPath).To(BeAnExistingFile())
 							Expect(containerInfo).To(Equal(expectedContainerInfo))
+							Expect(nodePort).To(Equal("1234"))
 							return nil, nil
 						}
 					})

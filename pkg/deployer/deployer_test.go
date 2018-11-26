@@ -14,11 +14,13 @@ var _ = Describe("Deployer", func() {
 	var (
 		contractDeployer deployer.Deployer
 		logger           *lagertest.TestLogger
+		nodePort         string
 	)
 
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("test")
 		contractDeployer = deployer.NewEthereumDeployer(logger, filepath.Join("assets", "deployer_test.js"))
+		nodePort = "8545"
 	})
 
 	It("runs the specified contract path", func() {
@@ -39,7 +41,7 @@ var _ = Describe("Deployer", func() {
 			Bindings:        portBindings,
 		}
 
-		nodeInfo, err := contractDeployer.DeployContract(contractInfo, containerInfo)
+		nodeInfo, err := contractDeployer.DeployContract(contractInfo, containerInfo, nodePort)
 		Expect(err).ToNot(HaveOccurred())
 
 		expectedNodeInfo := &deployer.NodeInfo{
