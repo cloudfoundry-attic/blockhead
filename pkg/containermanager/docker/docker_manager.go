@@ -3,6 +3,7 @@ package docker
 import (
 	"context"
 	"io/ioutil"
+	"os"
 
 	"code.cloudfoundry.org/lager"
 	"github.com/cloudfoundry-incubator/blockhead/pkg/containermanager"
@@ -113,8 +114,13 @@ func (dc dockerContainerManager) Bind(ctx context.Context, bindingConfig contain
 		bindings[port.Port()] = containerBindings
 	}
 
+	dockerServer := os.Getenv("DOCKER_SERVER")
+	if dockerServer == "" {
+		dockerServer = "127.0.0.1"
+	}
+
 	response := containermanager.ContainerInfo{
-		InternalAddress: "127.0.0.1",
+		InternalAddress: dockerServer,
 		ExternalAddress: dc.externalAddress,
 		Bindings:        bindings,
 	}
