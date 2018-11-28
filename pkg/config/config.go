@@ -79,8 +79,10 @@ func NewState(configPath string, servicePath string) (*State, error) {
 		return nil, fmt.Errorf("Service Directory Missing")
 	}
 
-	if _, err := os.Stat(servicePath); os.IsNotExist(err) {
+	if mode, err := os.Stat(servicePath); os.IsNotExist(err) {
 		return nil, fmt.Errorf("%v: %s", err, servicePath)
+	} else if !mode.IsDir() {
+		return nil, fmt.Errorf("A service directory is expected as the second argument.")
 	}
 
 	files, err := ioutil.ReadDir(servicePath)
