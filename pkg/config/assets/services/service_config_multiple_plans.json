@@ -1,0 +1,27 @@
+{
+    "name": "name-2",
+    "description": "desc",
+    "tags": [
+        "ethereum",
+        "geth"
+    ],
+    "display_name": "display-name",
+    "plans": [
+        {
+            "name": "plan-name-2",
+            "image": "image",
+            "ports": [
+                "1234"
+            ],
+            "description": "plan-desc"
+        },
+        {
+            "name": "plan-name-3",
+            "image": "image-2",
+            "ports": [
+                "1234"
+            ],
+            "description": "plan-desc-2"
+        }
+    ]
+}
