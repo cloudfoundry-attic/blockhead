@@ -199,6 +199,52 @@ var _ = Describe("Config", func() {
 							))
 						})
 					})
+
+					Context("when there is service with multiple plans", func() {
+						var anotherExpectedService config.Service
+						BeforeEach(func() {
+							serviceFilePath = fmt.Sprintf("%s/service_config_multiple_plans.json", servicePath)
+							copy("assets/services/service_config_multiple_plans.json", serviceFilePath)
+
+							anotherExpectedService = config.Service{
+								Name:        "name-2",
+								Description: "desc",
+								DisplayName: "display-name",
+								Tags:        []string{"ethereum", "geth"},
+							}
+
+							planMap := make(map[string]*config.Plan)
+							expectedPlan1 := config.Plan{
+								Name:        "plan-name-2",
+								Image:       "image",
+								Ports:       []string{"1234"},
+								Description: "plan-desc",
+							}
+							planMap["uuid-4"] = &expectedPlan1
+
+							expectedPlan2 := config.Plan{
+								Name:        "plan-name-3",
+								Image:       "image-2",
+								Ports:       []string{"1234"},
+								Description: "plan-desc-2",
+							}
+							planMap["uuid-5"] = &expectedPlan2
+
+							anotherExpectedService.Plans = planMap
+							expectedServices["uuid-3"] = anotherExpectedService
+
+						})
+
+						It("should have the both plan in the second service", func() {
+							parsedState, err := config.NewState(configPath, servicePath)
+							Expect(err).NotTo(HaveOccurred())
+
+							Expect(parsedState.Services).To(ConsistOf(
+								utils.EquivalentService(&expectedService),
+								utils.EquivalentService(&anotherExpectedService),
+							))
+						})
+					})
 				})
 			})
 		})

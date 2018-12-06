@@ -124,7 +124,9 @@ func NewState(configPath string, servicePath string) (*State, error) {
 
 		for _, plan := range serviceDef.Plans {
 			id := uuid.New()
-			service.Plans[id] = &plan
+			//necessary to create a new variable so that a new pointer is created before storing the plan
+			p := plan
+			service.Plans[id] = &p
 		}
 
 		state.Services[serviceID] = &service
