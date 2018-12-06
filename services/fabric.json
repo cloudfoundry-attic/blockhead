@@ -1,0 +1,26 @@
+{
+    "name": "fab3",
+    "description": "Hyperledger Fabric Proxy",
+    "tags": [
+        "fabric",
+        "proxy",
+        "evm"
+    ],
+    "display_name": "Fabric Proxy 0.1",
+    "plans": [
+        {
+            "name": "fab3-org1",
+            "free": true,
+            "image": "swayr/fab3-org1",
+            "description": "Fab3 org 1",
+            "ports": ["8545"]
+        },
+        {
+            "name": "fab3-org2",
+            "free": true,
+            "image": "swayr/fab3-org2",
+            "description": "Fab3 org 2",
+            "ports": ["8545"]
+        }
+    ]
+}

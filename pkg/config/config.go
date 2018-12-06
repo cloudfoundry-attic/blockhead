@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/pborman/uuid"
 )
@@ -24,8 +25,37 @@ type Config struct {
 	ExternalAddress  string `json:"external_address,omitempty"`
 }
 
+type ServiceType int
+
+const (
+	ETHEREUM ServiceType = iota
+	FABRIC
+)
+
+var serviceTypeStr = [...]string{
+	ETHEREUM: "ethereum",
+	FABRIC:   "fabric",
+}
+
+func (s ServiceType) String() string {
+	if ETHEREUM <= s && s <= FABRIC {
+		return serviceTypeStr[s]
+	}
+	return "invalid"
+}
+
+func serviceTypeFromString(s string) (ServiceType, error) {
+	for k, v := range serviceTypeStr {
+		if v == strings.ToLower(s) {
+			return ServiceType(k), nil
+		}
+	}
+	return -1, fmt.Errorf("invalid service type: %s", s)
+}
+
 type Service struct {
 	Name        string
+	Type        ServiceType
 	Description string
 	DisplayName string
 	Tags        []string
@@ -41,6 +71,7 @@ type Plan struct {
 
 type ServiceDefinition struct {
 	Name        string   `json:"name"`
+	Type        string   `json:"type"`
 	Description string   `json:"description"`
 	DisplayName string   `json:"display_name"`
 	Tags        []string `json:"tags"`
@@ -112,8 +143,21 @@ func NewState(configPath string, servicePath string) (*State, error) {
 			return nil, fmt.Errorf("Error parsing service file: %s - %v", serviceFilePath, err.Error())
 		}
 
+		var serviceType *ServiceType
+		for _, tag := range serviceDef.Tags {
+			if svc, err := serviceTypeFromString(tag); err == nil {
+				serviceType = &svc
+				break
+			}
+		}
+
+		if serviceType == nil {
+			return nil, fmt.Errorf(fmt.Sprintf("Service type not found: %s", serviceFilePath))
+		}
+
 		service := Service{
 			Name:        serviceDef.Name,
+			Type:        *serviceType,
 			Description: serviceDef.Description,
 			DisplayName: serviceDef.DisplayName,
 			Tags:        serviceDef.Tags,

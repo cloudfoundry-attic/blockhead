@@ -56,7 +56,9 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	// images are unaffected
 	jsonString := `{
 			"reference":{
-				"nimak/geth:latest": true
+				"nimak/geth:latest": true,
+				"swayr/fab3-org1": true,
+				"swayr/fab3-org2": true
 		}
 	}
 	`
@@ -71,7 +73,7 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	Expect(err).ToNot(HaveOccurred())
 
 	if len(images) > 0 {
-		Expect(images).To(HaveLen(1))
+		Expect(len(images)).To(BeNumerically("<", 3))
 		imageId := images[0].ID
 
 		removedImages, err := cli.ImageRemove(context.Background(), imageId, types.ImageRemoveOptions{Force: true})

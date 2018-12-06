@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -27,6 +28,11 @@ type BlockheadBroker struct {
 type BindResponse struct {
 	ContainerInfo *containermanager.ContainerInfo
 	NodeInfo      *deployer.NodeInfo
+}
+
+type Fab3ProvisionArgs struct {
+	UserID  string `json:"user_id"`
+	Channel string `json:"channel"`
 }
 
 func NewBlockheadBroker(logger lager.Logger, state *config.State, manager containermanager.ContainerManager, deployer deployer.Deployer) BlockheadBroker {
@@ -88,10 +94,32 @@ func (b BlockheadBroker) Provision(ctx context.Context, instanceID string, detai
 		return brokerapi.ProvisionedServiceSpec{}, errors.New("plan not found")
 	}
 
+	env := []string{}
+
+	if service.Type == config.FABRIC {
+		logger.Info("Service is of type Fabric")
+		userInfo := &Fab3ProvisionArgs{}
+		err := json.Unmarshal(details.RawParameters, userInfo)
+		if err != nil {
+			return brokerapi.ProvisionedServiceSpec{}, fmt.Errorf("malformed or missing provision parameters: %s", err.Error())
+		}
+
+		if userInfo.UserID == "" {
+			return brokerapi.ProvisionedServiceSpec{}, errors.New("user id is required at provision")
+		}
+		env = append(env, fmt.Sprintf("FABPROXY_USER=%s", userInfo.UserID))
+
+		if userInfo.Channel == "" {
+			return brokerapi.ProvisionedServiceSpec{}, errors.New("channel is required at provision")
+		}
+		env = append(env, fmt.Sprintf("FABPROXY_CHANNEL=%s", userInfo.Channel))
+	}
+
 	containerConfig := containermanager.ContainerConfig{
 		Name:         instanceID,
 		Image:        plan.Image,
 		ExposedPorts: plan.Ports,
+		Env:          env,
 	}
 
 	return brokerapi.ProvisionedServiceSpec{}, b.manager.Provision(ctx, containerConfig)
@@ -158,7 +186,12 @@ func (b BlockheadBroker) Bind(ctx context.Context, instanceID, bindingID string,
 		return brokerapi.Binding{}, err
 	}
 
-	nodeInfo, err := b.deployer.DeployContract(contractInfo, containerInfo, plan.Ports[0])
+	deployConfig := deployer.DeployConfig{
+		NodePort: plan.Ports[0],
+		NodeType: service.Type,
+	}
+
+	nodeInfo, err := b.deployer.DeployContract(contractInfo, containerInfo, deployConfig)
 	if err != nil {
 		return brokerapi.Binding{}, err
 	}

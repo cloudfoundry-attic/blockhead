@@ -44,6 +44,7 @@ var _ = Describe("Broker", func() {
 
 		service := config.Service{
 			Name:        "eth",
+			Type:        config.ETHEREUM,
 			Description: "desc",
 			DisplayName: "display-name",
 			Tags:        []string{"eth", "geth"},
@@ -219,6 +220,90 @@ var _ = Describe("Broker", func() {
 			Expect(config.ExposedPorts).To(ConsistOf("1234"))
 			Expect(config.Image).To(Equal("some-image"))
 		})
+
+		Context("when the service is of type FABRIC", func() {
+			BeforeEach(func() {
+				fabricService := config.Service{
+					Name:        "fabric",
+					Type:        config.FABRIC,
+					Description: "desc",
+					DisplayName: "display-name",
+					Tags:        []string{"fab3", "fabric"},
+					Plans:       make(map[string]*config.Plan),
+				}
+
+				plan := config.Plan{
+					Name:        "free",
+					Image:       "some-image",
+					Ports:       []string{"1234"},
+					Description: "free-trial",
+				}
+
+				fabricService.Plans["plan-id"] = &plan
+
+				free = true
+				expectedService = brokerapi.Service{
+					ID:          "fabric-service-id",
+					Name:        "fabric",
+					Description: "desc",
+					Bindable:    true,
+					Tags:        []string{"fab3", "fabric"},
+					Metadata: &brokerapi.ServiceMetadata{
+						DisplayName: "display-name",
+					},
+					Plans: []brokerapi.ServicePlan{
+						brokerapi.ServicePlan{
+							ID:          "plan-id",
+							Name:        "free",
+							Description: "free-trial",
+							Free:        &free,
+						},
+					},
+				}
+
+				servicesMap[expectedService.ID] = &fabricService
+			})
+
+			It("passes along the user id provided at provision time", func() {
+				provisionDetails := brokerapi.ProvisionDetails{
+					ServiceID:     "fabric-service-id",
+					PlanID:        "plan-id",
+					RawParameters: []byte(`{"user_id":"user1", "channel":"mychannel"}`),
+				}
+
+				expectedEnv := []string{"FABPROXY_USER=user1", "FABPROXY_CHANNEL=mychannel"}
+				_, err := blockhead.Provision(ctx, "some-instance", provisionDetails, false)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(fakeManager.ProvisionCallCount()).To(Equal(1))
+
+				_, config := fakeManager.ProvisionArgsForCall(0)
+				Expect(config.Name).To(Equal("some-instance"))
+				Expect(config.ExposedPorts).To(ConsistOf("1234"))
+				Expect(config.Image).To(Equal("some-image"))
+				Expect(config.Env).To(Equal(expectedEnv))
+			})
+
+			It("returns an error if parameters or json are missing", func() {
+				provisionDetails := brokerapi.ProvisionDetails{
+					ServiceID: "fabric-service-id",
+					PlanID:    "plan-id",
+				}
+				_, err := blockhead.Provision(ctx, "some-instance", provisionDetails, false)
+				Expect(err).To(HaveOccurred())
+			})
+
+			It("returns an error if user_is is missing", func() {
+
+				provisionDetails := brokerapi.ProvisionDetails{
+					ServiceID:     "fabric-service-id",
+					PlanID:        "plan-id",
+					RawParameters: []byte("{}"),
+				}
+				_, err := blockhead.Provision(ctx, "some-instance", provisionDetails, false)
+				Expect(err).To(HaveOccurred())
+			})
+		})
 	})
 
 	Context("Deprovision", func() {
@@ -389,10 +474,11 @@ var _ = Describe("Broker", func() {
 
 						// testing the args for call inside the stub since we delete the
 						// contract file as part of the cleanup and after binding is done
-						fakeDeployer.DeployContractStub = func(contractInfo *deployer.ContractInfo, containerInfo *containermanager.ContainerInfo, nodePort string) (*deployer.NodeInfo, error) {
+						fakeDeployer.DeployContractStub = func(contractInfo *deployer.ContractInfo, containerInfo *containermanager.ContainerInfo, deployConfig deployer.DeployConfig) (*deployer.NodeInfo, error) {
 							Expect(contractInfo.ContractPath).To(BeAnExistingFile())
 							Expect(containerInfo).To(Equal(expectedContainerInfo))
-							Expect(nodePort).To(Equal("1234"))
+							Expect(deployConfig.NodePort).To(Equal("1234"))
+							Expect(deployConfig.NodeType).To(Equal(config.ETHEREUM))
 							return nil, nil
 						}
 					})

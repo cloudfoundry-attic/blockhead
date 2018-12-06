@@ -17,6 +17,7 @@ var config = JSON.parse(configContent);
 const provider = config.provider
 const password = config.password
 const contractArgs = config.args
+const nodeType = config.type
 const contractPath = args.contract
 
 result = {}
@@ -72,11 +73,11 @@ function convertArray(argument){
 const constructorArgs = convertArray(contractArgs)
 
 function runDeployment(contract){
-  web3.eth.personal.getAccounts()
+  web3.eth.getAccounts()
   .then(addresses => {
     address = addresses[0]
     result["address"] = address
-    return web3.eth.personal.unlockAccount(address, '')
+    return (nodeType == "ethereum") ? web3.eth.personal.unlockAccount(address, '') : address
   })
   .then(() => {
     var contractAbi = contract.interface

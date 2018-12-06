@@ -7,8 +7,10 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"syscall"
 
 	"code.cloudfoundry.org/lager"
+	"github.com/cloudfoundry-incubator/blockhead/pkg/config"
 	"github.com/cloudfoundry-incubator/blockhead/pkg/containermanager"
 	"github.com/pborman/uuid"
 )
@@ -27,9 +29,14 @@ type NodeInfo struct {
 	TransactionHash string `json:"transaction_hash"`
 }
 
+type DeployConfig struct {
+	NodePort string
+	NodeType config.ServiceType
+}
+
 //go:generate counterfeiter -o ../fakes/fake_deployer.go . Deployer
 type Deployer interface {
-	DeployContract(contractInfo *ContractInfo, containerInfo *containermanager.ContainerInfo, nodePort string) (*NodeInfo, error)
+	DeployContract(contractInfo *ContractInfo, containerInfo *containermanager.ContainerInfo, deployConfig DeployConfig) (*NodeInfo, error)
 }
 
 type ethereumDeployer struct {
@@ -44,21 +51,23 @@ func NewEthereumDeployer(logger lager.Logger, deployerPath string) Deployer {
 	}
 }
 
-func (e ethereumDeployer) DeployContract(contractInfo *ContractInfo, containerInfo *containermanager.ContainerInfo, nodePort string) (*NodeInfo, error) {
+func (e ethereumDeployer) DeployContract(contractInfo *ContractInfo, containerInfo *containermanager.ContainerInfo, deployConfig DeployConfig) (*NodeInfo, error) {
 	e.logger.Info("deploy-started")
 	defer e.logger.Info("deploy-finished")
 
 	// nodePort is the port we want from the blockchain node
-	portBindings := containerInfo.Bindings[nodePort]
+	portBindings := containerInfo.Bindings[deployConfig.NodePort]
 	if len(portBindings) <= 0 {
-		return nil, errors.New(fmt.Sprintf("Port Bindings do not have %s port mapping", nodePort))
+		return nil, errors.New(fmt.Sprintf("Port Bindings do not have %s port mapping", deployConfig.NodePort))
 	}
 	config := struct {
 		Provider string   `json:"provider"`
+		Type     string   `json:"type"`
 		Password string   `json:"password"`
 		Args     []string `json:"args"`
 	}{
 		Provider: fmt.Sprintf("http://%s:%s", containerInfo.InternalAddress, portBindings[0].Port),
+		Type:     deployConfig.NodeType.String(),
 		Password: "",
 		Args:     contractInfo.ContractArgs,
 	}
@@ -75,6 +84,8 @@ func (e ethereumDeployer) DeployContract(contractInfo *ContractInfo, containerIn
 		return nil, err
 	}
 
+	e.logger.Info("push-configuration", lager.Data{"config": string(configJson)})
+
 	outputFile, err := ioutil.TempFile("", uuid.New())
 	if err != nil {
 		return nil, err
@@ -84,7 +95,13 @@ func (e ethereumDeployer) DeployContract(contractInfo *ContractInfo, containerIn
 	cmd := exec.Command("node", e.deployerPath, "-c", configFile.Name(), "-o", outputFile.Name(), contractInfo.ContractPath)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		e.logger.Error("run-failed", err, lager.Data{"output": string(output)})
+		if exiterr, ok := err.(*exec.ExitError); ok {
+			if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
+				e.logger.Error("exitted-with-status", err, lager.Data{"code": status.ExitStatus(), "output": string(output)})
+			}
+		} else {
+			e.logger.Error("cmd-wait-failed", err, lager.Data{"output": string(output)})
+		}
 		return nil, err
 	}
 

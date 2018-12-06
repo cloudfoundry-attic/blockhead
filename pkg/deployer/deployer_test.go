@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 
 	"code.cloudfoundry.org/lager/lagertest"
+	"github.com/cloudfoundry-incubator/blockhead/pkg/config"
 	"github.com/cloudfoundry-incubator/blockhead/pkg/containermanager"
 	"github.com/cloudfoundry-incubator/blockhead/pkg/deployer"
 	. "github.com/onsi/ginkgo"
@@ -41,7 +42,12 @@ var _ = Describe("Deployer", func() {
 			Bindings:        portBindings,
 		}
 
-		nodeInfo, err := contractDeployer.DeployContract(contractInfo, containerInfo, nodePort)
+		deployConfig := deployer.DeployConfig{
+			NodePort: nodePort,
+			NodeType: config.ETHEREUM,
+		}
+
+		nodeInfo, err := contractDeployer.DeployContract(contractInfo, containerInfo, deployConfig)
 		Expect(err).ToNot(HaveOccurred())
 
 		expectedNodeInfo := &deployer.NodeInfo{

@@ -1,14 +1,13 @@
 {
-    "name": "name",
+    "name": "name-2",
     "description": "desc",
     "tags": [
-        "ethereum",
-        "geth"
+        "random"
     ],
     "display_name": "display-name",
     "plans": [
         {
-            "name": "plan-name",
+            "name": "plan-name-2",
             "image": "image",
             "ports": [
                 "1234"
