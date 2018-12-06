@@ -31,6 +31,7 @@ var _ = Describe("DockerManager", func() {
 			Name:         "some-name",
 			Image:        "some-image",
 			ExposedPorts: []string{"1234", "2345/udp"},
+			Env:          []string{"SOME_ENV_VAR=ENV_VAR"},
 		}
 	})
 
@@ -58,6 +59,7 @@ var _ = Describe("DockerManager", func() {
 			Expect(config).NotTo(BeNil())
 			Expect(config.ExposedPorts).To(HaveKey(nat.Port("1234/tcp")))
 			Expect(config.ExposedPorts).To(HaveKey(nat.Port("2345/udp")))
+			Expect(config.Env).To(ConsistOf("SOME_ENV_VAR=ENV_VAR"))
 			Expect(hostConfig).NotTo(BeNil())
 			Expect(hostConfig.PublishAllPorts).To(BeTrue())
 			Expect(hostConfig.Privileged).To(BeFalse())

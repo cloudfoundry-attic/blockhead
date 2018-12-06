@@ -142,6 +142,7 @@ func createContainerConfig(containerConfig containermanager.ContainerConfig) (*c
 		Image:           containerConfig.Image,
 		Volumes:         map[string]struct{}{},
 		NetworkDisabled: false,
+		Env:             containerConfig.Env,
 	}
 
 	return config, nil

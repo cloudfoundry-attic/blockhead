@@ -8,6 +8,7 @@ type ContainerConfig struct {
 	Name         string
 	Image        string
 	ExposedPorts []string
+	Env          []string
 }
 
 type BindConfig struct {

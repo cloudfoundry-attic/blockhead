@@ -9,11 +9,18 @@
     "display_name": "Fabric Proxy 0.1",
     "plans": [
         {
-            "name": "free",
+            "name": "fab3-org1",
             "free": true,
-            "image": "nimak/evm-proxy:latest",
-            "description": "Free Trial",
-            "ports": ["5000"]
+            "image": "swayr/fab3-org1",
+            "description": "Fab3 org 1",
+            "ports": ["8545"]
+        },
+        {
+            "name": "fab3-org2",
+            "free": true,
+            "image": "swayr/fab3-org2",
+            "description": "Fab3 org 2",
+            "ports": ["8545"]
         }
     ]
 }

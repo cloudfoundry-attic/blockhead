@@ -124,8 +124,14 @@ var _ = Describe("Blockhead", func() {
 					Plans: []brokerapi.ServicePlan{
 						brokerapi.ServicePlan{
 							ID:          "not-checked",
-							Name:        "free",
-							Description: "Free Trial",
+							Name:        "fab3-org1",
+							Description: "Fab3 org 1",
+							Free:        &True,
+						},
+						brokerapi.ServicePlan{
+							ID:          "not-checked",
+							Name:        "fab3-org2",
+							Description: "Fab3 org 2",
 							Free:        &True,
 						},
 					},
@@ -295,7 +301,7 @@ var _ = Describe("Blockhead", func() {
 							}
 						}
 						Expect(service).NotTo(BeNil())
-						Expect(service.Plans).To(HaveLen(1))
+						Expect(service.Plans).To(HaveLen(2))
 						plan := service.Plans[0]
 						serviceId = service.ID
 						planId = plan.ID
@@ -311,24 +317,24 @@ var _ = Describe("Blockhead", func() {
 
 						It("should successfully provision the service", func() {
 							instanceId := newContainerId()
-							resp := requestProvision(client, serviceId, planId, instanceId)
+							resp := requestFabricProvision(client, serviceId, planId, instanceId)
 							Expect(resp.StatusCode).To(Equal(http.StatusCreated))
 
 							info, err := cli.ContainerInspect(context.Background(), instanceId)
 							Expect(err).NotTo(HaveOccurred())
-							Expect(info.Config.ExposedPorts).To(HaveKey(nat.Port("5000/tcp")))
+							Expect(info.Config.ExposedPorts).To(HaveKey(nat.Port("8545/tcp")))
 						})
 
 						Context("with an existing node", func() {
 							BeforeEach(func() {
 								existingInstanceId := newContainerId()
-								resp := requestProvision(client, serviceId, planId, existingInstanceId)
+								resp := requestFabricProvision(client, serviceId, planId, existingInstanceId)
 								Expect(resp.StatusCode).To(Equal(http.StatusCreated))
 							})
 
 							It("successfully launches a second node", func() {
 								instanceId := newContainerId()
-								resp := requestProvision(client, serviceId, planId, instanceId)
+								resp := requestFabricProvision(client, serviceId, planId, instanceId)
 								Expect(resp.StatusCode).To(Equal(http.StatusCreated))
 							})
 						})
@@ -341,12 +347,12 @@ var _ = Describe("Blockhead", func() {
 
 						BeforeEach(func() {
 							instanceId = newContainerId()
-							resp := requestProvision(client, serviceId, planId, instanceId)
+							resp := requestFabricProvision(client, serviceId, planId, instanceId)
 							Expect(resp.StatusCode).To(Equal(http.StatusCreated))
 
 							info, err := cli.ContainerInspect(context.Background(), instanceId)
 							Expect(err).NotTo(HaveOccurred())
-							Expect(info.Config.ExposedPorts).To(HaveKey(nat.Port("5000/tcp")))
+							Expect(info.Config.ExposedPorts).To(HaveKey(nat.Port("8545/tcp")))
 						})
 
 						AfterEach(func() {
@@ -371,12 +377,12 @@ var _ = Describe("Blockhead", func() {
 
 						BeforeEach(func() {
 							instanceId = newContainerId()
-							resp := requestProvision(client, serviceId, planId, instanceId)
+							resp := requestFabricProvision(client, serviceId, planId, instanceId)
 							Expect(resp.StatusCode).To(Equal(http.StatusCreated))
 
 							info, err := cli.ContainerInspect(context.Background(), instanceId)
 							Expect(err).NotTo(HaveOccurred())
-							Expect(info.Config.ExposedPorts).To(HaveKey(nat.Port("5000/tcp")))
+							Expect(info.Config.ExposedPorts).To(HaveKey(nat.Port("8545/tcp")))
 						})
 
 						AfterEach(func() {
@@ -397,7 +403,7 @@ var _ = Describe("Blockhead", func() {
 							json.Unmarshal(body, &bindingResults)
 							creds := bindingResults.Credentials.(map[string]interface{})
 							containerInfo := creds["ContainerInfo"].(map[string]interface{})
-							Expect(containerInfo["Bindings"]).To(HaveKey("5000"))
+							Expect(containerInfo["Bindings"]).To(HaveKey("8545"))
 							nodeInfo := creds["NodeInfo"].(map[string]interface{})
 							Expect(nodeInfo["Account"]).NotTo(Equal(""))
 							Expect(nodeInfo["ContractAddress"]).NotTo(Equal(""))
@@ -431,6 +437,41 @@ func requestProvision(client *http.Client, serviceId, planId, instanceId string)
 	}{
 		ServiceId: serviceId,
 		PlanId:    planId,
+	}
+
+	payload := new(bytes.Buffer)
+	json.NewEncoder(payload).Encode(request)
+
+	provisionURL := fmt.Sprintf("%s/v2/service_instances/%s", serverAddress, instanceId)
+	req, err := http.NewRequest("PUT", provisionURL, payload)
+	Expect(err).NotTo(HaveOccurred())
+	req.SetBasicAuth("test", "test")
+	req.Header.Add("X-Broker-API-Version", "2.0")
+	req.Header.Add("Content-Type", "application/json")
+
+	var resp *http.Response
+	Eventually(func() error {
+		resp, err = client.Do(req)
+		return err
+	}).Should(Succeed())
+	return resp
+}
+
+func requestFabricProvision(client *http.Client, serviceId, planId, instanceId string) *http.Response {
+	request := struct {
+		ServiceId string      `json:"service_id"`
+		PlanId    string      `json:"plan_id"`
+		Params    interface{} `json:"parameters"`
+	}{
+		ServiceId: serviceId,
+		PlanId:    planId,
+		Params: struct {
+			UserID  string `json:"user_id"`
+			Channel string `json:"channel"`
+		}{
+			UserID:  "User1",
+			Channel: "mychannel",
+		},
 	}
 
 	payload := new(bytes.Buffer)
