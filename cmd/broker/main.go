@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 
 	"code.cloudfoundry.org/lager"
 	"github.com/docker/docker/client"
@@ -55,7 +56,7 @@ func main() {
 		if err != nil {
 			logger.Fatal("could not set up a kubernetes-client", err)
 		}
-		manager = kcm.NewKubernetesContainerManager(logger, clientset)
+		manager = kcm.NewKubernetesContainerManager(logger, clientset, state.Config.ExternalAddress)
 		logger.Debug("using kubernetes containermanager")
 	default:
 		logger.Fatal("no container manager in config", fmt.Errorf("no container manager specified in config %q", configFilepath))
@@ -79,6 +80,6 @@ func main() {
 	}
 
 	http.Handle("/", log(brokerAPI))
-	logger.Debug("listening on" + string(state.Config.Port))
+	logger.Debug("listening on port:" + strconv.Itoa(int(state.Config.Port)))
 	logger.Fatal("http-listen", http.ListenAndServe(fmt.Sprintf(":%d", state.Config.Port), nil))
 }

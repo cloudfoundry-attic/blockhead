@@ -1,0 +1,45 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: "n"
+  name: "n"
+spec:
+  containers:
+  - image: nginx
+    name: "n"
+    ports:
+    - containerPort: 80
+  restartPolicy: Never
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    run: "n"
+  name: "n"
+spec:
+  ports:
+  - port: 8080
+    targetPort: 80
+  selector:
+    run: "n"
+  type: NodePort
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: "n"
+  namespace: default
+  annotations:
+    ingress.bluemix.net/rewrite-path: "serviceName=n rewrite=/"
+spec:
+  rules:
+  - host: peanuts.sng01.containers.appdomain.cloud
+    http:
+      paths:
+      - path: "/nginx/"
+        backend:
+          serviceName: "n"
+          servicePort: 8080

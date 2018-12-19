@@ -1,4 +1,4 @@
-# client-go
+re# client-go
 
 Go clients for talking to a [kubernetes](http://kubernetes.io/) cluster.
 

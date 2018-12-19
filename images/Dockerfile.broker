@@ -1,7 +1,7 @@
 from golang:1.11-alpine3.8 as builder
 workdir /go/src/github.com/cloudfoundry-incubator/blockhead
 copy . .
-run go build -v -o /broker ./cmd/broker
+run CGO_ENABLED=0 go build -ldflags '-s -w -d' -v -o /broker ./cmd/broker
 
 
 from node:10
