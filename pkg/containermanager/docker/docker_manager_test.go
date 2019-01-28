@@ -3,6 +3,7 @@ package docker_test
 import (
 	"context"
 	"errors"
+	"os"
 
 	"code.cloudfoundry.org/lager/lagertest"
 	"github.com/cloudfoundry-incubator/blockhead/pkg/containermanager"
@@ -159,6 +160,22 @@ var _ = Describe("DockerManager", func() {
 			It("should return container info in the bind response", func() {
 				bindResponse, _ := manager.Bind(context.TODO(), bindConfig)
 				Expect(bindResponse).To(Equal(expectedBindResponse))
+			})
+
+			Context("when DOCKER_SERVER is set", func() {
+				const BindAddress = "192.168.100.100"
+				BeforeEach(func() {
+					os.Setenv("DOCKER_SERVER", BindAddress)
+				})
+
+				AfterEach(func() {
+					os.Unsetenv("DOCKER_SERVER")
+				})
+
+				It("returns the value for the DOCKER_SERVER", func() {
+					bindResponse, _ := manager.Bind(context.TODO(), bindConfig)
+					Expect(bindResponse.InternalAddress).To(Equal(BindAddress))
+				})
 			})
 		})
 	})
